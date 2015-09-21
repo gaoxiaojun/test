@@ -348,19 +348,14 @@ tags: c++
 >**注意**
 >函数调用操作符必须是成员函数。一个类可以定义多个版本的调用操作符，每一个参数类型或数量必须不一样。
 
-
-### Function-Object Classes with State
-
-Like any other class, a function-object class can have additional members aside from
-operator(). Function-object classes often contain data members that are used to
-customize the operations in the call operator.
+和其他类一样，一个函数对象类除了`operator()`，还可以有其它成员。函数对象类通常包含其它成员用来
+调整函数调用操作符的操作。
 
     class PrintString {
     public:
         PrintString(ostream &o = cout, char c = ' '):
             os(o), sep(c) { }
-        void operator()(const string &s) const { os << s << sep;
-    }
+        void operator()(const string &s) const { os << s << sep;}
     private:
         ostream &os;   // stream on which to write
         char sep;      // character to print after each output
@@ -371,86 +366,69 @@ customize the operations in the call operator.
     PrintString errors(cerr, '\n');
     errors(s);             // prints s followed by a newline on cerr
 
-Function objects are most often used as arguments to the generic algorithms.
+函数对象最常用于泛型算法的参数：
 
     for_each(vs.begin(), vs.end(), PrintString(cerr, '\n'));
 
-### 14.8.1. Lambdas Are Function Objects
+## Lambdas是函数对象
 
-When we write a lambda, the compiler translates that
-expression into an unnamed object of an unnamed class
-The
-classes generated from a lambda contain an overloaded function-call operator.
+当我们写一个`lambda`时，编译器将表达式翻译成一个匿名类的匿名对象。由`lambda`生成的类
+包含了一个重载的函数调用操作符。
 
-    // sort words by size, but maintain alphabetical order for words of the same size
     stable_sort(words.begin(), words.end(),
                 [](const string &a, const string &b)
                   { return a.size() < b.size();});
 
-acts like an unnamed object of a class that would look something like
+行为就像一个匿名对象的类，看起来像：
 
     class ShorterString {
     public:
-        bool operator()(const string &s1, const string &s2)
-    const
+        bool operator()(const string &s1, const string &s2) const
         { return s1.size() < s2.size(); }
     };
 
-We can rewrite the call to stable_sort to use this class instead of the lambda
-expression:
-
     stable_sort(words.begin(), words.end(), ShorterString());
 
-### Classes Representing Lambdas with Captures
+## 类表示Lambdas带捕获成员
 
-    // get an iterator to the first element whose size() is >= sz
     auto wc = find_if(words.begin(), words.end(),
-                [sz](const string &a)
+                [sz](const string &a){ return a.size() >= sz;});
 
-would generate a class that looks something like
+会生成像这样的类：
 
     class SizeComp {
-        SizeComp(size_t n): sz(n) { } // parameter for each captured
-    variable
-        // call operator with the same return type, parameters, and body as the lambda
+    public:
+        SizeComp(size_t n): sz(n) { } // parameter for each captured variable
         bool operator()(const string &s) const
             { return s.size() >= sz; }
     private:
         size_t sz; // a data member for each variable captured by value
     };
 
-    // get an iterator to the first element whose size() is >= sz
     auto wc = find_if(words.begin(), words.end(), SizeComp(sz));
 
-Classes generated from a lambda expression have a deleted default constructor,
-deleted assignment operators, and a default destructor. Whether the class has a
-defaulted or deleted copy/move constructor depends in the usual ways on the types of
-the captured data members
+由lambda表达式生成的类有一个`deleted`默认构造函数，`deleted`赋值操作符和一个默认析构函数。
+是否有默认的或`deleted``copy/move`构造函数取决于捕获的数据成员。
 
-### 14.8.2. Library-Defined Function Objects
+## 标准库定义的函数对象
 
-The standard library defines a set of classes that represent the arithmetic, relational,
-and logical operators.
-For example, the plus class has a function-call operator that applies + to a
-pair of operands; the modulus class defines a call operator that applies the binary %
-operator; the equal_to class applies ==; and so on.
+标准库定义了一个类集合，表示算术，关系和逻辑运算符。
+`plus`类有一个函数调用操作符，应用`+`操作符。
+`modulus`类有一个函数调用操作符，应用`%`操作符。
+`equal_to`类有一个函数调用操作符，应用`==`操作符。
 
     plus<int> intAdd;       // function object that can add two int values
     negate<int> intNegate;  // function object that can negate an int value
-    // uses intAdd::operator(int, int) to add 10 and 20
-    int sum = intAdd(10, 20);         // equivalent to sum = 30
-    sum = intNegate(intAdd(10, 20));  // equivalent to sum = 30
-    // uses intNegate::operator(int) to generate -10 as the second parameter
-    // to intAdd::operator(int, int)
+    int sum = intAdd(10, 20);         // sum = 30
+    sum = intNegate(intAdd(10, 20));  // sum = -30
     sum = intAdd(10, intNegate(10));  // sum = 0
 
-### Using a Library Function Object with the Algorithms
+## 算法中使用标准库函数对象
 
     // passes a temporary function object that applies the < operator to two strings
     sort(svec.begin(), svec.end(), greater<string>());
 
-One important aspect of these library function objects is that the library guarantees
-that they will work for pointers.
+标准库函数对象保证对指针也有作用。
 
     vector<string *> nameTable;  // vector of pointers
     // error: the pointers in nameTable are unrelated, so < is undefined
@@ -459,69 +437,59 @@ that they will work for pointers.
     // ok: library guarantees that less on pointer types is well defined
     sort(nameTable.begin(), nameTable.end(), less<string*>());
 
-It is also worth noting that the associative containers use less<key_type> to order
-their elements. As a result, we can define a set of pointers or use a pointer as the
-key in a map without specifying less directly.
+值得注意的是关联容器使用`less<key_type>`排序它们的元素。因此，我们能定义一个指针集合，或者使用
+一个指针作为`key`的`map`容器而不用直接指定`less`。
 
-### 14.8.3. Callable Objects and function
+## 可调用对象和函数
 
-C++ has several kinds of callable objects: functions and pointers to functions,
-lambdas (§ 10.3.2, p. 388), objects created by bind (§ 10.3.4, p. 397), and classes
-that overload the function-call operator.
+C++有几种可调用对象：函数和函数指针，lambdas，由`bind`创建的对象和重载了函数调用操作符的类。
 
-### Different Types Can Have the Same Call Signature
+不同类型可以有相同的调用签名：
 
-    // ordinary function
-    int add(int i, int j) { return i + j; }
-    // lambda, which generates an unnamed function-object class
-    auto mod = [](int i, int j) { return i % j; };
-    // function-object class
+    int add(int i, int j) { return i + j; } // 普通函数
+    auto mod = [](int i, int j) { return i % j; }; // 匿名函数
+    // 函数对象类
     struct div {
         int operator()(int denominator, int divisor) {
             return denominator / divisor;
         }
     };
 
-    // maps an operator to a pointer to a function taking two ints and returning an int
     map<string, int(*)(int,int)> binops;
+   
+    binops.insert({"+", add}); // ok: add是一个指向合适类型的函数指针
+    binops.insert({"%", mod}); // error: mod不是一个指向函数的指针
 
-    // ok: add is a pointer to function of the appropriate type
-    binops.insert({"+", add}); // {"+", add} is a pair
-    binops.insert({"%", mod}); // error: mod is not a pointer to function
+### 标准库function类型
 
-### The Library function Type
+	#include <functional>
 
-We can solve this problem using a new library type named function that is defined in
-the functional header
+    function<T> f;          空函数对象。
+    function<T> f(nullptr); 显式构造空函数对象。
+    function<T> f(obj);     保存一个obj的副本。
+    f                       true当f拥有一个可调用对象，否则false。
+    f(args)                 传递参数args，调用函数。
 
-function is a template. As with other templates we’ve used, we must specify
-additional information when we create a function type. In this case, that
-information is the call signature of the objects that this particular function type can
-represent. As with other templates, we specify the type inside angle brackets:
+    定义为function<T>的成员的类型
+    result_type             可调用对象的返回类型。
+    argument_type           当参数为1个或2个时的类型。
+    first_argument_type
+    second_argument_type
 
-    function<int(int, int)>
+`function`是一个模板。和其它模板一样，我们必须指定`function`的函数类型。
 
-    function<int(int, int)> f1 = add;    // function pointer
-    function<int(int, int)> f2 = div();  // object of a function-object
-    class
-    function<int(int, int)> f3 = [](int  i, int j) // lambda
-                                 { return i * j; };
+    function<int(int, int)> f1 = add;    // 函数指针
+    function<int(int, int)> f2 = div();  // 函数对象
+    function<int(int, int)> f3 = [](int i, int j) { return i * j;}; // 匿名函数
     cout << f1(4,2) << endl; // prints 6
     cout << f2(4,2) << endl; // prints 2
     cout << f3(4,2) << endl; // prints 8
-
-    // table of callable objects corresponding to each binary operator
-    // all the callables must take two ints and return an int
-    Download at http://www.pin5i.com/C++ Primer, Fifth Edition
-    // an element can be a function pointer, function object, or lambda
-    map<string, function<int(int, int)>> binops;
 
     map<string, function<int(int, int)>> binops = {
         {"+", add},                  // function pointer
         {"-", std::minus<int>()},    // library function object
         {"/",  div()},               // user-defined function object
-        {"*", [](int i, int j) { return i * j; }}, // unnamed
-    lambda
+        {"*", [](int i, int j) { return i * j; }}, // unnamed lambda
         {"%", mod} };                // named lambda object
 
     binops["+"](10, 5); // calls add(10, 5)
@@ -530,62 +498,40 @@ represent. As with other templates, we specify the type inside angle brackets:
     binops["*"](10, 5); // calls the lambda function object
     binops["%"](10, 5); // calls the lambda function object
 
-### Overloaded Functions and function
+### 重载函数和function
 
-We cannot (directly) store the name of an overloaded function in an object of type
-function:
+我们不能直接保存一个重载函数的函数名：
 
     int add(int i, int j) { return i + j; }
     Sales_data add(const Sales_data&, const Sales_data&);
     map<string, function<int(int, int)>> binops;
-    binops.insert( {"+", add} ); // error: which add?
+    binops.insert({"+", add}); // error: which add?
 
-One way to resolve the ambiguity is to store a function pointer (§ 6.7, p. 247) instead
-of the name of the function:
+解决二义性的一个方法是存储函数指针：
 
-    int (*fp)(int,int) = add; // pointer to the version of add that takes two
-    ints
-    binops.insert( {"+", fp} ); // ok: fp points to the right version of add
+    int (*fp)(int,int) = add;
+    binops.insert({"+", fp});
 
-Alternatively, we can use a lambda to disambiguate:
+或者使用lambda消除歧义：
 
-    // ok: use a lambda to disambiguate which version of add we want to use
-    binops.insert( {"+", [](int a, int b) {return add(a, b);} }
-    );
+    binops.insert({"+", [](int a, int b) {return add(a, b);}});
 
->Note
-The function class in the new library is not related to classes named
-unary_function and binary_function that were part of earlier versions
-of the library. These classes have been deprecated by the more general bind
-function (§ 10.3.4, p. 401).
+# 重载，转换和操作符
 
-### 14.9. Overloading, Conversions, and Operators
+转换构造函数和转换操作符定义了类类型的转换。这种转换又叫做用户定义的转换。
 
-Converting constructors and conversion operators define class-type conversions.
-Such conversions are also referred to as user-defined conversions.
+## 转换操作符
 
-### 14.9.1. Conversion Operators
-
-A conversion operator is a special kind of member function that converts a value of
-a class type to a value of some other type. A conversion function typically has the
-general form
+转换操作符是一种特殊的成员函数，将一个类类型的值转换为其它类型的值。一个典型的转换函数具有形式：
 
     operator type() const;
 
-Conversion operators can be defined for any type
-(other than void) that can be a function return type (§ 6.1, p. 204). Conversions to
-an array or a function type are not permitted. Conversions to pointer types—both data
-and function pointers—and to reference types are allowed.
+转换操作符可以为任意（除了`void`）函数返回的类型定义转换。不允许转换为数组或函数类型。
+允许转换为指针（数据指针和函数指针）和引用。
 
-Conversion operators have no explicitly stated return type and no parameters, and
-they must be defined as member functions. Conversion operations ordinarily should
-not change the object they are converting. As a result, conversion operators usually
-should be defined as const members.
+>**注意**
+>转换函数必须是一个成员函数，不能指定返回类型，参数列表必须为空，通常为const。
 
->Note
-A conversion function must be a member function, may not specify a return
-type, and must have an empty parameter list. The function usually should be
-const.
 
 ### Defining a Class with a Conversion Operator
 
