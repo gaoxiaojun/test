@@ -158,3 +158,246 @@ PyQt用`QAction`封装用户动作。
     editInvertAction = self.createAction("&Invert",
             self.editInvert, "Ctrl+I", "editinvert",
             "Invert the image's colors", True, "toggled(bool)")
+
+`toggled(bool)`信号不仅告诉我们动作被调用，而且返回动作是否被选中。
+
+一个动作组管理一组动作使得任何时候只有一个动作被选中。
+
+    mirrorGroup = QActionGroup(self)
+    editUnMirrorAction = self.createAction("&Unmirror",
+            self.editUnMirror, "Ctrl+U", "editunmirror",
+            "Unmirror the image", True, "toggled(bool)")
+    mirrorGroup.addAction(editUnMirrorAction)
+    editUnMirrorAction.setChecked(True)
+
+可选中的动作默认是未选中状态，所以在动作组中初始时必须选择一个为选中状态。
+
+虽然所有动作已经创建好，但是它们还不能工作。只有当动作加进菜单或工具栏才能起作用。
+
+    editMenu = self.menuBar().addMenu("&Edit")
+    self.addActions(editMenu, (editInvertAction,
+            editSwapRedAndBlueAction, editZoomAction))
+    def addActions(self, target, actions):
+        for action in actions:
+            if action is None:
+                target.addSeparator()
+            else:
+                target.addAction(action)
+
+也可以使用`QWidget.addActions`添加多个动作到菜单或工具栏。
+
+    mirrorMenu = editMenu.addMenu(QIcon(":/editmirror.png"),
+                                  "&Mirror")
+    self.addActions(mirrorMenu, (editUnMirrorAction,
+            editMirrorHorizontalAction, editMirrorVerticalAction))
+
+子目录的创建和其它目录一样，不同的是使用`QMenu.addMenu`加进父目录。
+
+    self.fileMenu = self.menuBar().addMenu("&File")
+    self.fileMenuActions = (fileNewAction, fileOpenAction,
+            fileSaveAction, fileSaveAsAction, None,
+            filePrintAction, fileQuitAction)
+    self.connect(self.fileMenu, SIGNAL("aboutToShow()"),
+                 self.updateFileMenu)
+
+    fileToolbar = self.addToolBar("File")
+    fileToolbar.setObjectName("FileToolBar")
+    self.addActions(fileToolbar, (fileNewAction, fileOpenAction,
+                                  fileSaveAsAction))
+
+`addToolBar`创建一个`QToolBar`对象。
+
+    editToolbar = self.addToolBar("Edit")
+    editToolbar.setObjectName("EditToolBar")
+    self.addActions(editToolbar, (editInvertAction,
+            editSwapRedAndBlueAction, editUnMirrorAction,
+            editMirrorVerticalAction,
+            editMirrorHorizontalAction))
+
+添加部件到工具栏都一样： 创建部件，配置好部件，连接信号，然后把部件添加到工具栏
+
+    self.zoomSpinBox = QSpinBox()
+    self.zoomSpinBox.setRange(1, 400)
+    self.zoomSpinBox.setSuffix(" %")
+    self.zoomSpinBox.setValue(100)
+    self.zoomSpinBox.setToolTip("Zoom the image")
+    self.zoomSpinBox.setStatusTip(self.zoomSpinBox.toolTip())
+    self.zoomSpinBox.setFocusPolicy(Qt.NoFocus)
+    self.connect(self.zoomSpinBox,
+                 SIGNAL("valueChanged(int)"), self.showImage)
+    editToolbar.addWidget(self.zoomSpinBox)
+
+之前有一行这样的代码：
+
+    self.imageLabel.setContextMenuPolicy(Qt.ActionsContextMenu)
+
+它告诉PyQt，如果动作被加进imageLabel部件，它们也被用作右键菜单。
+
+    self.addActions(self.imageLabel, (editInvertAction,
+            editSwapRedAndBlueAction, editUnMirrorAction,
+            editMirrorVerticalAction, editMirrorHorizontalAction))
+
+`QWidget`类有一个`addAction`方法，因此`QMenu`，`QMenuBar`，`QToolBar`都继承了这个方法。
+尽管`QWidget`没有`addSeparator`方法，为了方便，`QMenu`，`QMenuBar`，`QToolBar`都提供了。
+如果要添加一个分隔符到右键菜单，则必须添加一个分隔动作。
+
+    separator = QAction(self)
+    separator.setSeparator(True)
+    self.addActions(editToolbar, (editInvertAction,
+            editSwapRedAndBlueAction, separator, editUnMirrorAction,
+            editMirrorVerticalAction, editMirrorHorizontalAction))
+
+# 恢复和保存主窗口状态
+
+    def main():
+        app = QApplication(sys.argv)
+        app.setOrganizationName("Qtrac Ltd.")
+        app.setOrganizationDomain("qtrac.eu")
+        app.setApplicationName("Image Changer")
+        app.setWindowIcon(QIcon(":/icon.png"))
+        form = MainWindow()
+        form.show()
+        app.exec_()
+
+函数main的第二行到第四行的主要作用就是程序配置的加载和保存。如果不传任何参数给`QSettings`对象，
+则它会使用这三行代码设定的名字。这些名字使得程序配置保存在合适的地方，比如Windows的注册表，Linux
+的$HOME/.config
+
+    settings = QSettings()
+    self.recentFiles = settings.value("RecentFiles").toStringList()
+    size = settings.value("MainWindow/Size",
+                          QVariant(QSize(600, 500))).toSize()
+    self.resize(size)
+    position = settings.value("MainWindow/Position",
+                              QVariant(QPoint(0, 0))).toPoint()
+    self.move(position)
+    self.restoreState(
+            settings.value("MainWindow/State").toByteArray())
+    self.setWindowTitle("Image Changer")
+    self.updateFileMenu()
+    QTimer.singleShot(0, self.loadInitialFile)
+
+`QSettings.value()`返回一个`QVariant`，因此必须转换为我们期望的数据类型。
+带2个参数形式的`value()`方法，第二个参数是默认值。
+
+`resize()`和`move()`并不会造成窗口抖动，因为这些操作是在窗口显示之前已经完成。
+Qt4.2引入2个新的方法保存和恢复一个顶层窗口的几何位置。
+
+    self.restoreGeometry(settings.value("Geometry").toByteArray())
+
+`QMainWindow`类提供`restoreState()`和`saveState()`方法，来恢复自或保存到一个`QByteArray`。
+它们只保存拥有唯一对象名的悬浮窗口的大小和位置以及工具栏的位置。
+
+> **启动时做大量处理**
+> 如果我们需要在启动时做大量处理，比如加载许多大文件，我们经常用一个独立的加载方法来做此事。
+> 想象一下，比如这个方法是loadInitialFiles()，加载许多大文件。则在show()和事件循环(exec_())
+> 开始之前，用户将体验到一个非常长的启动延迟。
+> 我们希望窗口尽可能快的出现，使用户知道启动成功，并能够看到长时间运行的进程。这些通过0延迟的
+> singleShot计时器完成。因为它并不会立即执行连接的槽，相反它简单地将槽放到事件队列就返回。
+> 0延迟计时器意思是，“当事件队列没有其它事件处理时处理这个事件”
+
+    def loadInitialFile(self):
+        settings = QSettings()
+        fname = unicode(settings.value("LastFile").toString())
+        if fname and QFile.exists(fname):
+            self.loadFile(fname)
+
+如果用户试图关闭程序，不管什么方式，`closeEvent()`被调用。
+
+```python
+    def closeEvent(self, event):
+        if self.okToContinue():
+            settings = QSettings()
+            filename = QVariant(QString(self.filename)) \
+                    if self.filename is not None else QVariant()
+            settings.setValue("LastFile", filename)
+            recentFiles = QVariant(self.recentFiles) \
+                    if self.recentFiles else QVariant()
+            settings.setValue("RecentFiles", recentFiles)
+            settings.setValue("MainWindow/Size", QVariant(self.size()))
+            settings.setValue("MainWindow/Position",
+                    QVariant(self.pos()))
+            settings.setValue("MainWindow/State",
+                    QVariant(self.saveState()))
+        else:
+            event.ignore()
+```
+
+|语法          | 描述          |
+|-------------|:-------------|
+|m.addDockWidget(a, d)|在QMainWindow m中添加QDockWidget d到Qt.QDockWidgetArea a|
+|m.addToolBar(s)|添加并返回一个名叫string s的QToolBar|
+|m.menuBar()|返回QMainWindow m的QMenuBar(第一次调用创建目录)|
+|m.restoreGeometry(ba)|根据QByteArray ba恢复QMainWindow m的位置和大小(Qt4.3)|
+|m.restoreState(ba)|根据QByteArray ba恢复QMainWindow m的悬浮窗和工具栏的状态|
+|m.saveGeometry()|返回封装在QByteArray中QMainWindow m的位置和大小(Qt4.3)|
+|m.saveState()|返回封装在QByteArray中QMainWindow m的悬浮窗和工具栏的状态|
+|m.setCentralWidget(w)|设置QMainWindow m的中央部件为QWidget w|
+|m.statusBar()|返回QMainWindow的QStatusBar(第一次调用创建状态栏)|
+|m.setWindowIcon(i)|设置QMainWindow m的图标为QIcon i；这个方法继承自QWidget|
+|m.setWindowTitle(s)|设置QMainWindow m的标题为string s；这个方法继承自QWidget|
+
+如果我们使用Qt4，使用`QWidget.restoreGeometry()`恢复窗口的几何位置，那么我们可以如此保存几何状态：
+
+    settings.setValue("Geometry", QVariant(self.saveGeometry()))
+
+使用这种方法，不需要单独保存主窗口的大小和位置。
+
+    def okToContinue(self):
+        if self.dirty:
+        reply = QMessageBox.question(self,
+                        "Image Changer - Unsaved Changes",
+                        "Save unsaved changes?",
+                        QMessageBox.Yes|QMessageBox.No|
+                        QMessageBox.Cancel)
+        if reply == QMessageBox.Cancel:
+            return False
+        elif reply == QMessageBox.Yes:
+            self.fileSave()
+        return True
+
+有些开发者使用`QMessageBox.Save`和`QMessageBox.Discard`。
+
+    def updateFileMenu(self):
+        self.fileMenu.clear()
+        self.addActions(self.fileMenu, self.fileMenuActions[:-1])
+        current = QString(self.filename) \
+                if self.filename is not None else None
+        recentFiles = []
+        for fname in self.recentFiles:
+            if fname != current and QFile.exists(fname):
+                recentFiles.append(fname)
+        if recentFiles:
+            self.fileMenu.addSeparator()
+            for i, fname in enumerate(recentFiles):
+                action = QAction(QIcon(":/icon.png"), "&%d %s" % (
+                        i + 1, QFileInfo(fname).fileName()), self)
+                action.setData(QVariant(fname))
+                self.connect(action, SIGNAL("triggered()"),
+                             self.loadFile)
+                self.fileMenu.addAction(action)
+        self.fileMenu.addSeparator()
+        self.fileMenu.addAction(self.fileMenuActions[-1])
+
+> **QMessageBox的静态方法**
+> QMessageBox类提供多个方便的静态方法，这些方法弹出一个有合适图标和按钮的模式对话框。
+> 最常用的方法为critical()，information()，question()和waring()。这些方法携带参数
+> 父类部件，窗口标题，消息文本(可以是纯文本或HTML)，0个或多个按钮。如果未指定按钮，则为OK按钮。
+> Qt4.0和Qt4.1中，OK按钮或Yes按钮位或QMessageBox.Default，Cancel按钮或No按钮位或
+  QMessageBox.Escape很常见。
+    reply = QMessageBox.question(self,
+            "Image Changer - Unsaved Changes", "Save unsaved changes?",
+            QMessageBox.Yes|QMessageBox.Default,
+            QMessageBox.No|QMessageBox.Escape)
+> 4.2中则自动绑定默认动作到相应的按钮上。
+> 如果我们想创建自定义的消息框，可以创建一个QMessageBox实例，然后使用QMessageBox.addButton()
+> QMessageBox.setIcon()添加按钮，再调用QMessageBox.exec_()弹出消息框。
+
+    def addRecentFile(self, fname):
+        if fname is None:
+            return
+        if not self.recentFiles.contains(fname):
+            self.recentFiles.prepend(QString(fname))
+            while self.recentFiles.count() > 9:
+                self.recentFiles.takeLast()
+
