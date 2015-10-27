@@ -401,3 +401,191 @@ Qt4.2引入2个新的方法保存和恢复一个顶层窗口的几何位置。
             while self.recentFiles.count() > 9:
                 self.recentFiles.takeLast()
 
+# 处理文件动作
+
+    def fileNew(self):
+        if not self.okToContinue():
+            return
+        dialog = newimagedlg.NewImageDlg(self)
+        if dialog.exec_():
+            self.addRecentFile(self.filename)
+            self.image = QImage()
+            for action, check in self.resetableActions:
+                action.setChecked(check)
+            self.image = dialog.image()
+            self.filename = None
+            self.dirty = True
+            self.showImage()
+            self.sizeLabel.setText("%d x %d" % (self.image.width(),
+                                                self.image.height()))
+            self.updateStatus("Created new image")
+
+    def updateStatus(self, message):
+        self.statusBar().showMessage(message, 5000)
+        self.listWidget.addItem(message)
+        if self.filename is not None:
+            self.setWindowTitle("Image Changer - %s[*]" % \
+                                os.path.basename(self.filename))
+        elif not self.image.isNull():
+            self.setWindowTitle("Image Changer - Unnamed[*]")
+        else:
+            self.setWindowTitle("Image Changer[*]")
+        self.setWindowModified(self.dirty)
+
+    def fileOpen(self):
+        if not self.okToContinue():
+            return
+        dir = os.path.dirname(self.filename) \
+                if self.filename is not None else "."
+        formats = ["*.%s" % unicode(format).lower() \
+                   for format in QImageReader.supportedImageFormats()]
+        fname = unicode(QFileDialog.getOpenFileName(self,
+                            "Image Changer - Choose Image", dir,
+                            "Image files (%s)" % " ".join(formats)))
+        if fname:
+            self.loadFile(fname)
+
+`QFileDialog.getOpenFileName()`返回一个`QString`保存文件名的绝对路径，或者返回空。
+
+    fname = unicode(QFileDialog.getOpenFileName(self,
+                    "%s - Choose Image" % QApplication.applicationName(),
+                    dir, "Image files (%s)" % " ".join(formats)))
+
+    def loadFile(self, fname=None):
+        if fname is None:
+            action = self.sender()
+            if isinstance(action, QAction):
+                fname = unicode(action.data().toString())
+                if not self.okToContinue():
+                    return
+            else:
+                return
+        if fname:
+            self.filename = None
+            image = QImage(fname)
+            if image.isNull():
+                message = "Failed to read %s" % fname
+            else:
+                self.addRecentFile(fname)
+                self.image = QImage()
+                for action, check in self.resetableActions:
+                    action.setChecked(check)
+                self.image = image
+                self.filename = fname
+                self.showImage()
+                self.dirty = False
+                self.sizeLabel.setText("%d x %d" % (
+                            image.width(), image.height()))
+                message = "Loaded %s" % os.path.basename(fname)
+            self.updateStatus(message)
+
+    def fileSave(self):
+        if self.image.isNull():
+            return
+        if self.filename is None:
+            self.fileSaveAs()
+        else:
+            if self.image.save(self.filename, None):
+                self.updateStatus("Saved as %s" % self.filename)
+                self.dirty = False
+            else:
+                self.updateStatus("Failed to save %s" % self.filename)
+
+    def fileSaveAs(self):
+        if self.image.isNull():
+            return
+        fname = self.filename if self.filename is not None else "."
+        formats = ["*.%s" % unicode(format).lower() \
+                   for format in QImageWriter.supportedImageFormats()]
+        fname = unicode(QFileDialog.getSaveFileName(self,
+                        "Image Changer - Save Image", fname,
+                        "Image files (%s)" % " ".join(formats)))
+        if fname:
+            if "." not in fname:
+                fname += ".png"
+            self.addRecentFile(fname)
+            self.filename = fname
+            self.fileSave()
+
+QFileDialog.getSaveFileName()提示用户提供一个文件名用来保存当前文件。
+
+# 处理编辑动作
+
+    def editInvert(self, on):
+        if self.image.isNull():
+            return
+        self.image.invertPixels()
+        self.showImage()
+        self.dirty = True
+        self.updateStatus("Inverted" if on else "Uninverted")
+
+    def editMirrorHorizontal(self, on):
+        if self.image.isNull():
+            return
+        self.image = self.image.mirrored(True, False)
+        self.showImage()
+        self.mirroredhorizontally = not self.mirroredhorizontally
+        self.dirty = True
+        self.updateStatus("Mirrored Horizontally" \
+                if on else "Unmirrored Horizontally")
+
+    def editUnMirror(self, on):
+        if self.image.isNull():
+            return
+        if self.mirroredhorizontally:
+            self.editMirrorHorizontal(False)
+        if self.mirroredvertically:
+            self.editMirrorVertical(False)
+
+    def editZoom(self):
+        if self.image.isNull():
+            return
+        percent, ok = QInputDialog.getInteger(self,
+                "Image Changer - Zoom", "Percent:",
+                self.zoomSpinBox.value(), 1, 400)
+        if ok:
+            self.zoomSpinBox.setValue(percent)
+
+`QInputDialog`提供了一些其它方便的静态方法，`getDouble()`，`getItem()`，`getText()`。
+所有这些方法返回一个tuple，包含一个指示用户是否输入的bool值和一个合法值。
+
+    def showImage(self, percent=None):
+        if self.image.isNull():
+            return
+        if percent is None:
+            percent = self.zoomSpinBox.value()
+        factor = percent / 100.0
+        width = self.image.width() * factor
+        height = self.image.height() * factor
+        image = self.image.scaled(width, height, Qt.KeepAspectRatio)
+        self.imageLabel.setPixmap(QPixmap.fromImage(image))
+
+根据PyQt的文档，`QPixmap`对屏幕显示做了优化，而`QImage`对编辑做了优化，因此我们用它保存图像数据。
+
+# 处理帮助动作
+
+    def helpAbout(self):
+        QMessageBox.about(self, "About Image Changer",
+                """<b>Image Changer</b> v %s
+                <p>Copyright &copy; 2007 Qtrac Ltd. 
+                All rights reserved.
+                <p>This application can be used to perform
+                simple image manipulations.
+                <p>Python %s - Qt %s - PyQt %s on %s""" % (
+                __version__, platform.python_version(),
+                QT_VERSION_STR, PYQT_VERSION_STR, platform.system()))
+
+`QMessageBox.about()`静态方法弹出一个给定标题和文本的只有OK按钮的模式对话框，其文本可以是HTML。
+
+# 总结
+
+主窗口风格的程序由`QMainWindow`子类创建，其窗口只有一个单一的部件作为中央部件。
+
+动作用来表示程序向用户提供的功能。这些动作保存在`QAction`对象中，包含文本(用于菜单)，图标(用于菜单
+和工具栏)，工具栏提示和状态栏提示，以及所连接的槽。
+通常所有的动作都会添加进菜单，而只有经常使用的一些加入工具栏。
+
+动作，动作组和悬浮窗必须显式提供一个父亲，比如主窗口，以保证在合适的时候能被销毁。
+
+程序通常使用资源(小文件，比如图标，和数据文件)，PyQt的资源机制使得访问和使用资源非常简单。使用
+`pyrcc4`将资源文件编程Python模块，再导入程序使用。
