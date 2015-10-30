@@ -32,7 +32,7 @@ tags: [Python, PyQt]
 
 `addStretch()`和插入`QSpacerItem`一样。
 
-预览窗口点击Form->Preview或者Ctrl+R。如果像预览不同风格，点击Form->Preview in
+预览窗口点击Form->Preview或者Ctrl+R。如果想预览不同风格，点击Form->Preview in
 
 # 实现对话框
 
