@@ -174,3 +174,128 @@ pygame.event.poll()返回一个事件，如果队列中有事件，否则返回�
 |VIDEORESIZE|Pygame窗口大小被改变|size,w,h|
 |VIDEOEXPOSE|部分或所有Pygame窗口暴露|none|
 |USEREVENT|用户事件发生|code|
+
+    #!/usr/bin/env python
+
+    import pygame
+    from pygame.locals import *
+    from sys import exit
+
+    pygame.init()
+    SCREEN_SIZE = (800, 600)
+    screen = pygame.display.set_mode(SCREEN_SIZE, 0, 32)
+
+    font = pygame.font.SysFont('arial', 16)
+    font_height = font.get_linesize()
+    event_text = []
+
+    while True:
+        event = pygame.event.wait()
+        event_text.append(str(event))
+        event_text = event_text[-SCREEN_SIZE[1]/font_height:]
+
+        if event.type == QUIT:
+            exit()
+
+        screen.fill((255, 255, 255))
+
+        y = SCREEN_SIZE[1] - font_height
+        for text in reversed(event_text):
+            screen.blit(font.render(text, True, (0, 0, 0)), (0, y))
+            y -= font_height
+
+        pygame.display.update()
+
+
+    SysFont(name, size, bold=False, italic=False)
+        pygame.font.SysFont(name, size, bold=False, italic=False) -> Font
+        create a pygame Font from system font resources
+        
+        This will search the system fonts for the given font
+        name. You can also enable bold or italic styles, and
+        the appropriate system font will be selected if available.
+        
+        This will always return a valid Font object, and will
+        fallback on the builtin pygame font if the given font
+        is not found.
+        
+        Name can also be a comma separated list of names, in
+        which case set of names will be searched in order. Pygame
+        uses a small set of common font aliases, if the specific
+        font you ask for is not available, a reasonable alternative
+        may be used.
+
+pygame.font.SysFont->pygame.font.Font
+
+    get_linesize(...)
+        Font.get_linesize(): return int
+        get the line space of the font text
+
+    render(...)
+        Font.render(text, antialias, color, background=None): return Surface
+        draw text on a new Surface
+
+    fill(...)
+        Surface.fill(color, rect=None, special_flags=0): return Rect
+        fill Surface with a solid color
+
+### 处理鼠标移动事件
+
+当鼠标移动时，MOUSEMOTION事件发生。包含下面三个值：
+
+* buttons-一个对应鼠标按钮的元组。buttons[0]是鼠标左按钮，buttons[1]是鼠标中间按钮，
+buttons[2]是鼠标右按钮。如果按钮被按下，则值为1，反之为0。多个按钮可以同时按下。
+* pos-一个元组，包含事件发生时鼠标所在位置。
+* rel-一个元祖，包含从上一个鼠标移动事件已经移动过的距离。
+
+### 处理鼠标按钮事件
+
+除了鼠标移动事件，鼠标还能产生MOUSEBUTTONDOWN和MOUSEBUTTONUP事件。包含下面2个值：
+
+* button-被按下的按钮的数字。1为鼠标左按钮，2为鼠标中间按钮，3为鼠标右按钮。
+* pos-一个元组，包含事件发生时鼠标所在位置。
+
+### 处理键盘事件
+
+键盘和控制杆有类似的上下事件。当一个键被按下KEYDOWN事件发生。当一个键松开KEYUP事件发生。
+
+    #!/usr/bin/env python
+
+    bg_file = 'sushiplate.jpg'
+
+    import pygame
+    from pygame.locals import *
+    from sys import exit
+
+    pygame.init()
+    screen = pygame.display.set_mode((640, 480), FULLSCREEN, 32)
+    background = pygame.image.load(bg_file).convert()
+
+    x, y = 0, 0
+    move_x, move_y = 0, 0
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == QUIT:
+                exit()
+            if event.type == KEYDOWN:
+                if event.key == K_LEFT:
+                    move_x = -1
+                elif event.key == K_RIGHT:
+                    move_x = 1
+                elif event.key == K_UP:
+                    move_y = -1
+                elif event.key == K_DOWN:
+                    move_y = 1
+            elif event.type == KEYUP:
+                if event.key == K_LEFT or event.key == K_RIGHT:
+                    move_x = 0
+                elif event.key == K_UP or event.key == K_DOWN:
+                    move_y = 0
+        x += move_x
+        y += move_y
+
+        screen.fill((0, 0, 0))
+        screen.blit(background, (x, y))
+
+        pygame.display.update()
