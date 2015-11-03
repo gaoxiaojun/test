@@ -105,3 +105,72 @@ Pygame包中的模块：
 |OPENGL|创建一个OpenGL渲染的外观|
 |RESIZABLE|创建一个可变大小的外观|
 |NOFRAME|创建一个没有边缘和标题栏的外观|
+
+如果没有提供depth参数值或设置为0，Pygame将使用你的桌面的值。
+
+|Bit Depth    |颜色个数        |
+|-------------|:-------------|
+|8 bits|256种颜色|
+|15 bits|32768种颜色，空闲一位|
+|16 bits|65536种颜色|
+|24 bits|16.7百万种颜色|
+|32 bits|16.7百万种颜色，空闲8位|
+
+`load`函数读取一个文件并返回一个包含图片数据的Surface对象，但是不可见直到我们画出来。
+`convert`是Surface的成员函数，这个函数将图片转换为和显示一样的格式。
+`convert_alpha`和`convert`类似，但是光标图片包含alpha信息。
+
+`pygame.event.get`返回一个事件。
+
+    get(...)
+        pygame.event.get(): return Eventlist
+        pygame.event.get(type): return Eventlist
+        pygame.event.get(typelist): return Eventlist
+        get events from the queue
+
+    get_pos(...)
+        pygame.mouse.get_pos(): return (x, y)
+        get the mouse cursor position
+
+    blit(...)
+        Surface.blit(source, dest, area=None, special_flags = 0): return Rect
+        draw one image onto another
+
+    update(...)
+        pygame.display.update(rectangle=None): return None
+        pygame.display.update(rectangle_list): return None
+        update portions of the screen for software displays
+
+# 理解事件
+
+事件可以在任何时候产生，不管程序当前在做什么。因为你不能对发生的事件立刻做出反应，Pygame将事件存入
+一个队列。
+
+### 获得事件
+
+在前一个例子中，我们使用pygame.event.get()获得所有事件并将它们从队列中移除。
+如果使用pygame.event.wait()，Pygame将会等待一个事件发生，程序会挂起直到事件发生。
+pygame.event.poll()返回一个事件，如果队列中有事件，否则返回一个类型为NOEVENT的假事件。
+
+每隔一段固定的时间调用事件处理函数很有必要，这样Pygame才能在内部处理事件。如果不使用任何事件处理
+函数，也可以调用pygame.event.pump()替代事件循环。
+
+事件对象包含一些描述事件发生的成员变量。所有事件对象都通用的是事件类型。
+
+|Event        |用途           |参数           |
+|-------------|:-------------|:-------------|
+|QUIT|用户点击关闭按钮|none|
+|ACTIVEEVENT|Pygame被激活或隐藏|gain,state|
+|KEYDOWN|键盘被按下|unicode,key,mod|
+|KEYUP|键盘被松开|key,mod|
+|MOUSEMOTION|鼠标被移动|pos,rel,buttons|
+|MOUSEBUTTONDOWN|鼠标被按下|pos,button|
+|MOUSEBUTTONUP|鼠标被松开|pos,button|
+|JOYAXISMOTION|控制杆被移动|joy,axis,value|
+|JOYBALLMOTION|控制球被移动|joy,ball,rel|
+|JOYHATMOTION|控制杆帽被移动|joy,hat,value|
+|JOYBUTTONDOWN|控制杆或pad按钮被按下|joy,button|
+|JOYBUTTONUP|控制杆或pad按钮被松开|joy,button|
+|VIDEORESIZE|Pygame窗口大小被改变|size,w,h|
+|VIDEOEXPOSE|部分或所有Pygame窗口暴露|none|
+|USEREVENT|用户事件发生|code|
