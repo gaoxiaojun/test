@@ -372,3 +372,47 @@ get_block可以查询一个事件是否被屏蔽。
     screen = pygame.display.set_mode((640, 480), FULLSCREEN, 32)
 
 > **注意**
+> 如果在全屏模式下出了什么事，有时候非常难回到桌面。因此进入全屏模式前，需要先在窗口模式下测试。
+> 同时提供一个退出程序方法，因为全屏模式下关闭按钮看不到。
+
+当进入全屏时，你的显卡可能会切换到不同的显示模式，这将改变显示的宽度，高度和一次显示颜色的数量。
+显卡只支持几种大小和颜色数量的组合。如果显示的大小不支持，Pygame将选择下一个大小，并居中显示。
+pygame.display.list_modes()可以查看显卡支持的分辨率。
+
+    >>> import pygame
+    >>> pygame.init()
+    >>> pygame.display.list_modes()
+
+如果显卡不支持你想要的颜色数量，Pygame将自动转换以适应当前显示设备。
+
+    #!/usr/bin/env python
+
+    background_image_filename = 'sushiplate.jpg'
+
+    import pygame
+    from pygame.locals import *
+    from sys import exit
+
+    pygame.init()
+    screen = pygame.display.set_mode((640, 480), 0, 32)
+    background = pygame.image.load(background_image_filename).convert()
+
+    Fullscreen = False
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == QUIT:
+                exit()
+
+        if event.type == KEYDOWN:
+            if event.key == K_f:
+                Fullscreen = not Fullscreen
+                if Fullscreen:
+                    screen = pygame.display.set_mode((640, 480), FULLSCREEN, 32)
+                else:
+                    screen = pygame.display.set_mode((640, 480), 0, 32)
+
+        screen.blit(background, (0, 0))
+        pygame.display.update()
+
+### 可改变大小的Pygame窗口
