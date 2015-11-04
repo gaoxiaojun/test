@@ -299,3 +299,76 @@ buttons[2]是鼠标右按钮。如果按钮被按下，则值为1，反之为0�
         screen.blit(background, (x, y))
 
         pygame.display.update()
+
+KEYDOWN和KEYUP事件包含下面三个值：
+
+* key-这是一个代表哪个键被按下或松开的数字。每一个键盘上的物理按钮都有一个以K_开头的常量。
+字母键为K_a到K_z，其它的如K_SPACE和K_RETURN。
+* mod-这个值代表和键组合使用的其它键，比如Shift，Alt和Ctrl。每一个组合键以KMOD_开头，
+比如KMOD_SHIFT，KMOD_ALT和KMOD_CTRL。检查这些值用&，比如mod & KMOD_CTRL。
+* unicode-这个是被按下的键的Unicode值。每一个符号都有一个Unicode值与它对应。
+
+### 过滤事件
+
+不是所有的事件在每一个游戏中都需要处理，而且通常存在其它方式获取某个事件可能提供的信息。比如，
+使用pygame.mouse.get_pos()就不需要响应MOUSEMOTION事件了。
+
+使用set_blocked函数可以从事件队列屏蔽事件。比如：
+
+    pygame.event.set_blocked(MOUSEMOTION)
+    pygame.event.set_blocked([KEYDOWN, KEYUP])
+    pygame.event.set_blocked(None)
+
+    set_blocked(...)
+        pygame.event.set_blocked(type): return None
+        pygame.event.set_blocked(typelist): return None
+        pygame.event.set_blocked(None): return None
+        control which events are allowed on the queue
+
+和set_blocked相反的是set_allowed，它允许事件进入事件队列。
+
+    set_allowed(...)
+        pygame.event.set_allowed(type): return None
+        pygame.event.set_allowed(typelist): return None
+        pygame.event.set_allowed(None): return None
+        control which events are allowed on the queue
+
+get_block可以查询一个事件是否被屏蔽。
+
+    get_blocked(...)
+        pygame.event.get_blocked(type): return bool
+        test if a type of event is blocked from the queue
+
+### 转发事件
+
+通常Pygame为你创建所有的事件，但是你也可以创建自己的事件。
+为了发送一个事件，首先使用pygame.event.Event创建一个事件对象，然后使用pygame.event.post
+发送到事件队列尾端。
+
+    my_event = pygame.event.Event(KEYDOWN, key=K_SPACE, mod=0, unicode=u' ')
+    pgame.event.post(my_event)
+
+事件构造函数接收事件类型和事件值参数。
+
+    Event(...)
+        pygame.event.Event(type, dict): return Event
+        pygame.event.Event(type, **attributes): return Event
+        create a new event object
+
+除了模拟pygame产生的事件，也可以创建新的事件。你只需使用一个大于USEREVENT的值作为事件的值。
+
+    CATONKEYBOARD = USEREVENT + 1
+    my_event = pygame.event.Event(CATONKEYBOARD, message="Bad cat!")
+    pgame.event.post(my_event)
+
+    for event in pygame.event.get():
+        if event.type == CATONKEYBOARD:
+            print event.message
+
+# 打开一个显示
+
+### 全屏显示
+
+    screen = pygame.display.set_mode((640, 480), FULLSCREEN, 32)
+
+> **注意**
