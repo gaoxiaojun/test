@@ -22,6 +22,7 @@ def main():
                 or test.shift_horizontal(isLeft=True)
                 or test.shift_horizontal(isLeft=False)):
             myBoard.game_over()
+
         for event in pygame.event.get():
             if event.type == QUIT:
                 terminate()
@@ -40,6 +41,11 @@ def main():
                 if event.key==K_RIGHT:
                     if myBoard.shift_horizontal(isLeft=False):
                         myBoard.spawn_piece()
+                if event.key == K_SPACE:
+                    print "Test board:"
+                    print test.board;
+                    print "my board:"
+                    print myBoard.board;
 
 if __name__ == '__main__':
     main()
