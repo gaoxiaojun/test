@@ -395,4 +395,225 @@ Pygame有一个Rect类存储和处理矩形对象。因为Rect对象很常使用
 
 # 用Pygame画图
 
+我们在之前的例子中已经使用过一些**pygame.draw**模块的函数了。这个模块的用途就是在屏幕上画几何图形。你可以使用它创建整个游戏而不需要加载其它图片。
 
+**pygame.draw**模块的函数前两个参数都是surface和颜色。每一个函数也会至少带一个点，也许是一个点的列表。每个点是一个包含坐标的元组。
+
+画图函数返回一个Rect对象包含了绘制过的区域，对于只想绘制屏幕的一部分很有用。
+
+|函数         |用途        |
+|------------|:----------|
+|rect|绘制矩形|
+|polygon|绘制多边形(三条边或更多)|
+|circle|绘制圆|
+|ellipse|绘制椭圆|
+|arc|绘制圆弧|
+|line|绘制直线|
+|lines|绘制多个直线|
+|aaline|绘制平滑直线|
+|aalines|绘制多个平滑直线|
+
+### pygame.draw.rect
+
+这个函数在surface上画一个矩形。除了目的surface和颜色，**pygame.draw.rect**接收一个Rect对象和width作为参数。如果width为0后忽略，则用固定颜色填充矩形，否则只画边缘。
+
+    import pygame
+    from pygame.locals import *
+    from sys import exit
+
+    from random import *
+
+    pygame.init()
+    screen = pygame.display.set_mode((640, 480), 0, 32)
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == QUIT:
+                exit()
+
+        screen.lock()
+        for count in range(10):
+            random_color = (randint(0, 255), randint(0, 255), randint(0, 255))
+            random_pos = (randint(0, 639), randint(0, 479))
+            random_size = (639 - randint(random_pos[0], 639), 479 -
+                randint(random_pos[1], 479))
+            pygame.draw.rect(screen, random_color, Rect(random_pos, random_size))
+        screen.unlock()
+
+        pygame.display.update()
+
+还有另外一个方法画填充的矩形。surface的**fill**方法接收一个Rect对象指定要填充的区域。**fill**比**pygame.draw.rect**要快，因为**fill**由显卡来执行。
+
+### pygame.draw.polygon
+
+**pygame.draw.polygon**接收一系列点的列表并在它们之间画形状。它也有一个width参数，如果width被忽略或设置为0，则多边形被填充，否则只画边缘。
+
+    import pygame
+    from pygame.locals import *
+    from sys import exit
+
+    pygame.init()
+    screen = pygame.display.set_mode((640, 480), 0, 32)
+
+    points = []
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == QUIT:
+                exit()
+            if event.type == MOUSEBUTTONDOWN:
+                points.append(event.pos)
+
+        screen.fill((255, 255, 255))
+
+        if len(points) >= 3:
+            pygame.draw.polygon(screen, (0, 255, 0), points, 1)
+        for point in points:
+            pygame.draw.circle(screen, (0, 0, 255), point, 5)
+
+        pygame.display.update()
+
+### pygame.draw.circle
+
+**circle**函数在surface上画圆。它接收一个圆心坐标和半径作为参数。和之前一样，width参数如果为0或忽略，则圆被填充，否则只画边缘。
+
+    import pygame
+    from pygame.locals import *
+    from sys import exit
+    from random import *
+
+    pygame.init()
+    screen = pygame.display.set_mode((640, 480), 0, 32)
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == QUIT:
+                exit()
+
+        random_color = (randint(0, 255), randint(0, 255), randint(0, 255))
+        random_pos = (randint(0, 639), randint(0, 479))
+        random_radius = randint(1, 200)
+        pygame.draw.circle(screen, random_color, random_pos, random_radius)
+
+        pygame.display.update()
+
+### pygame.draw.ellipse
+
+**用法**： pygame.draw.ellipse(Surface, color, Rect, width=0)
+
+    from random import *
+    import pygame
+    from pygame.locals import *
+    from sys import exit
+
+    pygame.init()
+    screen = pygame.display.set_mode((640, 480), 0, 32)
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == QUIT:
+                exit()
+
+        x, y = pygame.mouse.get_pos()
+        screen.fill((255, 255, 255))
+        pygame.draw.ellipse(screen, (0, 255, 0), (0, 0, x, y))
+
+        pygame.display.update()
+
+### pygame.draw.arc
+
+**用法**：pygame.draw.arc(Surface, color, Rect, start_angle, stop_angle, width=1)
+**arc**函数仅仅画椭圆的一部分，而且只画边缘。圆弧是不封闭的，因此没有**fill**方法。这个函数的width参数默认为1，你也可以设置为更大的值以得到更粗的线。
+
+    from random import *
+    from math import pi
+    import pygame
+    from pygame.locals import *
+    from sys import exit
+
+    pygame.init()
+    screen = pygame.display.set_mode((640, 480), 0, 32)
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == QUIT:
+                exit()
+
+        x, y = pygame.mouse.get_pos()
+        angle = (x / 639.) * pi * 2
+        screen.fill((255, 255, 255))
+        pygame.draw.arc(screen, (0, 0, 0), (0, 0, 639, 479), 0, angle)
+
+        pygame.display.update()
+
+### pygame.draw.line
+
+**用法**：pygame.draw.line(Surface, color, start_pos, end_pos, width=1)
+
+    import pygame
+    from pygame.locals import *
+    from sys import exit
+
+    pygame.init()
+    screen = pygame.display.set_mode((640, 480), 0, 32)
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == QUIT:
+                exit()
+
+        screen.fill((255, 255, 255))
+        mouse_pos = pygame.mouse.get_pos()
+
+        for x in xrange(0, 640, 20):
+            pygame.draw.line(screen, (0, 0, 0), (x, 0), mouse_pos)
+            pygame.draw.line(screen, (0, 0, 0), (x, 479), mouse_pos)
+
+        for y in xrange(0, 480, 20):
+            pygame.draw.line(screen, (0, 0, 0), (0, y), mouse_pos)
+            pygame.draw.line(screen, (0, 0, 0), (639, y), mouse_pos)
+
+        pygame.display.update()
+
+### pygame.draw.lines
+
+**用法**：pygame.draw.lines(Surface, color, closed, pointlist, width=1)
+
+closed是一个布尔值，指明是否需要多画一条线来使这些线条闭合。
+
+    import pygame
+    from pygame.locals import *
+    from sys import exit
+
+    pygame.init()
+    screen = pygame.display.set_mode((640, 480), 0, 32)
+
+    points = []
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == QUIT:
+                exit()
+            if event.type == MOUSEMOTION:
+                points.append(event.pos)
+                if len(points) > 100:
+                    del points[0]
+
+        screen.fill((255, 255, 255))
+
+        if len(points) > 1:
+            pygame.draw.lines(screen, (255, 0, 0), False, points, 2)
+
+        pygame.display.update()
+
+### pygame.draw.aaline
+
+**用法**：pygame.draw.aaline(Surface, color, start_pos, end_pos, width=1)
+
+你可能注意到了上一个画线函数画出的线有锯齿。这是因为一个像素对应一个坐标，而这个坐标可能没有直接在线里面，这个现象叫做锯齿。任何试图避免或减少锯齿的方法称为抗锯齿。
+
+**pygame.draw.aaline**和**pygame.draw.line**参数一样，但是能画出平滑的直线。缺点是它慢一点。
+
+### pygame.draw.aalines
+
+**用法**：pygame.draw.aalines(Surface, color, closed, pointlist, width=1)
