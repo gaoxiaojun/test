@@ -47,11 +47,11 @@ tags: [Python, Pygame]
 
         pygame.display.update()
 
-有个问题是我们不能精确直到画一个图片到屏幕需要多长时间。另一个问题是这个精灵在配置差的机器上移动慢，在配置好的机器上移动更快。
+有个问题是我们不能精确知道画一个图片到屏幕需要多长时间。另一个问题是这个精灵在配置差的机器上移动慢，在配置好的机器上移动更快。
 
 ### 关于时间
 
-解决第一个问题的技巧是使运动基于时间。我们需要直到距离上一个帧已经过去多长时间，据此我们能相应地在屏幕上放置任何物体。**pygame.time**模块有一个Clock对象可以用来跟踪时间。使用**pygame.time.Clock()**创建clock对象。
+解决第一个问题的技巧是使运动基于时间。我们需要知道距离上一个帧已经过去多长时间，据此我们能相应地在屏幕上放置任何物体。**pygame.time**模块有一个Clock对象可以用来跟踪时间。使用**pygame.time.Clock()**创建clock对象。
 
     clock = pygame.time.Clock()
 
@@ -221,8 +221,77 @@ tags: [Python, Pygame]
 
 # 探索向量
 
-向量是游戏开发者从数学借来的并用到很多领域，比如2D和3D游戏。向量和点类似，它们都有x和y值(在2D中)，但是用途不一样。一个点的坐标(10, 20)在屏幕上总是同一个位置，而一个向量(10, 20)意思是从当前位置x坐标加上10，y坐标加上20。因此你可以认为一个点就是从原点(0, 0)的向量。
+向量是游戏开发者从数学借来的并用到很多领域，比如2D和3D游戏。向量和点类似，它们都有x和y值(在2D中)，但是用途不一样。一个点的坐标(10, 20)在屏幕上总是同一个位置，而一个向量(10, 20)意思是从当前位置x坐标加上10，y坐标加上20。因此你可以认为一个点的坐标就是从原点(0, 0)到该点的向量。
 
 ### 创建向量
 
+你可以从任意2个点计算向量，只要用第二个点坐标减去第一个点坐标。比如点A(10, 20)，点B(30, 35)，则向量AB就是(20, 15)。这个向量告诉我们从A到B需要在x方向移动20个单位，在y方向移动15个单位。
 
+### 存储向量
+
+在Python里面没有内置的向量类型，但是你可以将向量存入list，或者自己定义向量类。方便起见，我们选择定义自己的向量类。
+
+    class Vector2(object):
+        def __init__(self, x=0.0, y=0.0):
+            self.x = x
+            self.y = y
+
+        def __str__(self):
+            return '(%s, %s)' % (self.x, self.y)
+
+        @classmethod
+        def from_points(cls, P1, P2):
+            return cls(P2[0] - P1[0], P2[1] - P1[1])
+
+`@classmethod`装饰使函数from_points变成一个类方法。类方法是通过类调用的，不是通过类实例调用，比如Vector2.from_points(P1, P2)。将from_points定义为一个类方法是因为它创建一个新的Vector2对象，而不是修改已经存在的对象。
+
+### 向量大小
+
+从A到B的向量大小就是2个点之间的距离。
+
+    def get_magnitude(self):
+        return math.sqrt(self.x ** 2 + self.y ** 2)
+
+### 单位向量
+
+向量实际描述了两件事情：大小和方向。通常这两个信息绑定在一个向量里面，但有时候你只需其中一个。有一种特殊的向量叫单位向量，它的大小总是为1。我们可以把任意向量缩放到一个单位向量，这叫向量的规格化。
+
+    def normalize(self):
+        magnitude = self.get_magnitude()
+        self.x /= magnitude
+        self.y /= magnitude
+
+### 向量加法
+
+向量加法是将两个向量组合产生一个向量，它有两个向量组合的效果。也就是AC=AB+BC。
+
+    def __add__(self, rhs):
+        return Vector2(self.x + rhs.x, self.y + rhs.y)
+
+### 向量减法
+
+向量减法和加法类似。
+
+    def __sub__(self, rhs):
+        return Vector2(self.x - rhs.x, self.y - rhs.y)
+
+### 否定向量
+
+如果想要改变向量的方向，使向量AB变成向量BA，需要将向量每个元素都改变符号。
+
+    def __neg__(self):
+        return Vector2(-self.x, -self.y)
+
+### 向量乘法和除法
+
+将一个向量乘于或除于一个系数(数字)，效果是改变向量的大小。如果向量乘于一个整数，则产生同一方向的向量，如果乘于一个负数，则产生相反方向的向量。
+
+    def __mul__(self, scalar):
+        return Vector2(self.x * scalar, self.y * scalar)
+
+    def __div__(self, scalar):
+        return Vector2(self.x / scalar, self.y / scalar)
+
+> **注意** 向量乘于向量也是可能的，但是在游戏中不常用，你可能永远都不需要它。
+
+向量乘法在
