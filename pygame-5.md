@@ -292,6 +292,80 @@ tags: [Python, Pygame]
     def __div__(self, scalar):
         return Vector2(self.x / scalar, self.y / scalar)
 
-> **注意** 向量乘于向量也是可能的，但是在游戏中不常用，你可能永远都不需要它。
+> **注意** 向量乘于向量也是可以的，但是在游戏中不常用，你可能永远都不需要它。
 
-向量乘法在
+向量乘法如何使用呢？基于时间把向量分解为很多步，向量乘法很有用。如果我们知道从A到B需要10秒，我们可以计算出每一秒我们到达的坐标。
+
+    A = (10.0, 20.0)
+    B = (30.0, 35.0)
+    AB = Vector2.from_points(A, B)
+    step = AB * .1
+    position = Vector2(A.x, A.y)
+    for n in range(10):
+        position += step
+        print position
+
+当在两个点之间移动，计算中间位置是基本的。你还可以用向量计算在重力，外部作用力和摩擦力作用下很多种现实的运动。
+
+### 游戏对象向量类
+
+作者已经写了一个二维向量类作为游戏对象的一部分。
+
+    from gameobjects.vector2 import *
+    A = (10.0, 20.0)
+    B = (30.0, 35.0)
+    AB = Vector2.from_points(A, B)
+    print "Vector AB is", AB
+    print "AB * 2 is", AB * 2
+    print "AB / 2 is", AB / 2
+    print "AB + (-10, 5) is", AB + (-10, 5)
+    print "Magnitude of AB is", AB.get_magnitude()
+    print "AB normalized is", AB.get_normalized()
+
+# 使用向量创建运动
+
+既然我们了解了向量，我们可以使用它以多种方式移动游戏角色，而且可以实现简单的，基于力学的物理现象，使得游戏更加可信。
+
+### 斜线运动
+
+让我们使用向量创建更加精确的斜线运动。
+
+    background_image_filename = 'sushiplate.jpg'
+    sprite_image_filename = 'fugu.png'
+
+    from sys import exit
+    import pygame
+    from pygame.locals import *
+    from gameobjects.vector2 import Vector2
+
+    pygame.init()
+
+    screen = pygame.display.set_mode((640, 480), 0, 32)
+
+    background = pygame.image.load(background_image_filename).convert()
+    sprite = pygame.image.load(sprite_image_filename).convert_alpha()
+
+    clock = pygame.time.Clock()
+
+    position = Vector2(100.0, 100.0)
+    speed = 250
+    heading = Vector2()
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == QUIT:
+                exit()
+            if event.type == MOUSEBUTTONDOWN:
+                destination = Vector2(*event.pos) - Vector2(*sprite.get_size()) / 2.
+                heading = Vector2.from_points(position, destination)
+                heading.normalize()
+
+            screen.blit(background, (0, 0))
+            screen.blit(sprite, position)
+
+            time_passed = clock.tick()
+            time_passed_seconds = time_passed / 1000.0
+
+            distance_moved = time_passed_seconds * speed
+            position += heading * distance_moved
+            pygame.display.update()
