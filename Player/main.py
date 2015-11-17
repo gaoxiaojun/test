@@ -6,8 +6,8 @@ import board
 
 def terminate(board):
     with open('2048.ini', 'w') as f:
-        f.write('Board=%d%s' % (board.dim, os.linesep))
-        f.write('HighScore=%d%s' % (board.high_score, os.linesep))
+        f.write('Board=%d\n' % board.dim)
+        f.write('HighScore=%d\n' % board.high_score)
     pygame.quit()
     sys.exit()
 
@@ -20,16 +20,14 @@ def main():
             l = ' '.join(line.split('=')).split()
             if l[0] == 'Board':
                 dim = int(float(l[-1]))
-                print dim
             elif l[0] == 'HighScore':
                 high_score = int(float(l[-1]))
-                print high_score
 
     myBoard = board.Board(dim, high_score)
 
     while True:
         pygame.display.flip()
-        pygame.display.set_caption('2048-score: %d  high score: %d' % (myBoard.score, myBoard.high_score))
+        pygame.display.set_caption('2048 for liying - score: %d  high score: %d' % (myBoard.score, myBoard.high_score))
         myBoard.print_board()
         test = myBoard.__deepcopy__()
         if not (test.shift_vertical(isUp=True)
@@ -46,21 +44,16 @@ def main():
                     terminate(myBoard)
                 if event.key == K_UP:
                     if myBoard.shift_vertical(isUp=True):
-                        myBoard.spawn_piece()
+                        myBoard.add_tile()
                 if event.key == K_DOWN:
                     if myBoard.shift_vertical(isUp=False):
-                        myBoard.spawn_piece()
+                        myBoard.add_tile()
                 if event.key == K_LEFT:
                     if myBoard.shift_horizontal(isLeft=True):
-                        myBoard.spawn_piece()
+                        myBoard.add_tile()
                 if event.key == K_RIGHT:
                     if myBoard.shift_horizontal(isLeft=False):
-                        myBoard.spawn_piece()
-                if event.key == K_SPACE:
-                    print "Test board:"
-                    print test.board
-                    print "my board:"
-                    print myBoard.board
+                        myBoard.add_tile()
 
 if __name__ == '__main__':
     main()

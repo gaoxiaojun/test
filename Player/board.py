@@ -24,16 +24,16 @@ class Board(object):
         if not isTest:
             self.display = pygame.display.set_mode((self.scr_w, self.scr_h))
             pygame.display.set_caption('2048')
-        self.spawn_piece()
+        self.add_tile()
         self.score = 0
-        self.spawn_piece()
+        self.add_tile()
 
     def __deepcopy__(self):
         new = Board(self.dim, isTest=True)
         new.board = self.board
         return new
 
-    def spawn_piece(self):
+    def add_tile(self):
         isFull = True
         free = []
 
@@ -47,7 +47,17 @@ class Board(object):
             self.game_over()
 
         r, c = random.choice(free)
-        self.board[r][c] = 1 if random.random() < 0.9 else 2
+        self.new_row, self.new_column = r, c
+
+        if self.dim == 4:
+            self.board[r][c] = 1 if random.random() < 0.9 else 2
+        else:
+            if random.random() < 0.7:
+                self.board[r][c] = 1
+            elif random.random() < 0.9:
+                self.board[r][c] = 2
+            else:
+                self.board[r][c] = 3
 
     def shift_vertical(self, isUp=True):
         temp = self._blank_board()
@@ -135,7 +145,10 @@ class Board(object):
                     length = len(str(2 ** block))
                     textMaker = pygame.font.Font(os.path.join(
                         sys.path[0], "clearsans.ttf"), int(FONT_FACTOR[length] * self.block_size))
-                    textColor = C_LTTXT if block > 2 else C_DRKTX
+                    if r == self.new_row and c == self.new_column:
+                        textColor = C_BRRED
+                    else:
+                        textColor = C_LTTXT if block > 2 else C_DRKTX
                     text = textMaker.render(str(2 ** block), 1, textColor)
                     textBox = text.get_rect()
                     textBox.center = (MARGIN_LEFT + c * (self.block_size + THICK) + self.block_size * 0.5,
