@@ -1,14 +1,8 @@
 #!/usr/bin/env python
 
-DIM = 4
-
 THICK = 5 
 MARGIN_TOP = 20
 MARGIN_LEFT = 20
-BLOCK_SIZE = 120
-PX_DIM = DIM * BLOCK_SIZE + (DIM - 1) * THICK
-SCR_H = PX_DIM + 2 * MARGIN_TOP
-SCR_W = PX_DIM + 2 * MARGIN_LEFT 
 
 C_BLACK = ( 56,  55,  48)
 C_EMPTY = (215, 208, 191)
@@ -51,4 +45,6 @@ FONT_SIZE = {1: 100,
              2:  80,
              3:  60,
              4:  50,
-             5:  40}            
+             5:  40}
+
+FONT_FACTOR = {1: 1.0, 2: .8, 3: .6, 4: .5, 5: .4, 6: .3, 7: .2}
