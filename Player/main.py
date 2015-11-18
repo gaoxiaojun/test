@@ -4,12 +4,14 @@ import pygame
 from pygame.locals import *
 import board
 
+
 def terminate(board):
     with open('2048.ini', 'w') as f:
         f.write('Board=%d\n' % board.dim)
         f.write('HighScore=%d\n' % board.high_score)
     pygame.quit()
     sys.exit()
+
 
 def main():
     pygame.init()
@@ -25,9 +27,10 @@ def main():
 
     myBoard = board.Board(dim, high_score)
 
-    while True:
+    while 1:
         pygame.display.flip()
-        pygame.display.set_caption('2048 for liying - score: %d  high score: %d' % (myBoard.score, myBoard.high_score))
+        pygame.display.set_caption(
+            '2048 for liying - score: %d  high score: %d' % (myBoard.score, myBoard.high_score))
         myBoard.print_board()
         test = myBoard.__deepcopy__()
         if not (test.shift_vertical(isUp=True)
@@ -54,6 +57,10 @@ def main():
                 if event.key == K_RIGHT:
                     if myBoard.shift_horizontal(isLeft=False):
                         myBoard.add_tile()
+            elif event.type == VIDEORESIZE:
+                myBoard.set_size(event.size)
+
+
 
 if __name__ == '__main__':
     main()

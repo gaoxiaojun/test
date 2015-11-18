@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 
-THICK = 5 
+THICK = 5
 MARGIN_TOP = 20
 MARGIN_LEFT = 20
 
-C_BLACK = ( 56,  55,  48)
+C_BLACK = (56,  55,  48)
 C_EMPTY = (215, 208, 191)
 C_WALLS = (185, 170, 162)
 C_BACKG = (249, 246, 232)
@@ -33,13 +33,13 @@ C_MAP = {0: C_EMPTY,
          7: C_YELL1,
          8: C_YELL2,
          9: C_YELL3,
-         10:C_YELL4,
-         11:C_YELL5,
-         12:C_BLACK,
-         13:C_BLACK,
-         14:C_BLACK,
-         15:C_BLACK,
-         16:C_BLACK}
+         10: C_YELL4,
+         11: C_YELL5,
+         12: C_BLACK,
+         13: C_BLACK,
+         14: C_BLACK,
+         15: C_BLACK,
+         16: C_BLACK}
 
 FONT_SIZE = {1: 100,
              2:  80,

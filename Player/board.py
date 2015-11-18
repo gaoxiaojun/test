@@ -22,7 +22,7 @@ class Board(object):
 
         self.board = self._blank_board()
         if not isTest:
-            self.display = pygame.display.set_mode((self.scr_w, self.scr_h))
+            self.display = pygame.display.set_mode((self.scr_w, self.scr_h), RESIZABLE, 32)
             pygame.display.set_caption('2048')
         self.add_tile()
         self.score = 0
@@ -92,7 +92,8 @@ class Board(object):
         for r in range(self.dim):
             value = -1
             tempc = 0 if isLeft else self.dim - 1
-            order = range(0, self.dim) if isLeft else range(self.dim - 1, -1, -1)
+            order = range(0, self.dim) if isLeft else range(
+                self.dim - 1, -1, -1)
             for c in order:
                 block = self.board[r][c]
                 if block == value:
@@ -172,3 +173,9 @@ class Board(object):
 
         time.sleep(3)
         terminate(self)
+
+    def set_size(self, screen_size):
+        self.scr_h = self.scr_w = (screen_size[0] + screen_size[1]) / 2
+        self.px_dim = self.scr_h - 2 * MARGIN_TOP
+        self.block_size = (self.px_dim - (self.dim - 1) * THICK) / self.dim
+        self.display = pygame.display.set_mode((self.scr_w, self.scr_h), RESIZABLE, 32)
