@@ -12,7 +12,7 @@ from main import terminate
 
 class Board(object):
 
-    def __init__(self, dim=4, high_score=0, isTest=False):
+    def __init__(self, dim=4, high_score=0):
         self.dim = 4 if dim < 4 else dim
         self.high_score = high_score
         self.block_size = 4 * 120 / self.dim
@@ -20,18 +20,12 @@ class Board(object):
         self.scr_h = self.px_dim + 2 * MARGIN_TOP
         self.scr_w = self.px_dim + 2 * MARGIN_LEFT
 
-        self.board = self._blank_board()
-        if not isTest:
-            self.display = pygame.display.set_mode((self.scr_w, self.scr_h), RESIZABLE, 32)
-            pygame.display.set_caption('2048')
+        self.display = pygame.display.set_mode((self.scr_w, self.scr_h), 0, 32)
+
+        self.board = self._init_board()
+        self.add_tile()
         self.add_tile()
         self.score = 0
-        self.add_tile()
-
-    def __deepcopy__(self):
-        new = Board(self.dim, isTest=True)
-        new.board = self.board
-        return new
 
     def add_tile(self):
         isFull = True
@@ -60,63 +54,77 @@ class Board(object):
                 self.board[r][c] = 3
 
     def shift_vertical(self, isUp=True):
-        temp = self._blank_board()
+        moved = False
+
         for c in range(self.dim):
             value = -1
-            tempr = 0 if isUp else self.dim - 1
+            cur_row = 0 if isUp else self.dim - 1
             order = range(0, self.dim) if isUp else range(self.dim - 1, -1, -1)
             for r in order:
                 block = self.board[r][c]
                 if block == value:
-                    temp[tempr][c] = value + 1
+                    self.board[cur_row][c] = value + 1
                     self.score += 2**(value + 1)
                     if self.score > self.high_score:
                         self.high_score = self.score
-                    tempr += 1 if isUp else -1
+                    cur_row += 1 if isUp else -1
                     value = -1
+                    self.board[r][c] = 0
+                    moved = True
                 elif value == -1:
                     if block:
                         value = block
+                        if cur_row != r:
+                            self.board[r][c] = 0
+                            moved = True
                 elif block != value and block:
-                    temp[tempr][c] = value
-                    tempr += 1 if isUp else -1
+                    self.board[cur_row][c] = value
+                    cur_row += 1 if isUp else -1
                     value = block
-            temp[tempr][c] = value if value > 0 else 0
-        if self.board != temp:
-            self.board = temp
-            return True
-        return False
+                    if cur_row != r:
+                        self.board[r][c] = 0
+                        moved = True
+            self.board[cur_row][c] = value if value > 0 else 0
+
+        return moved
 
     def shift_horizontal(self, isLeft=True):
-        temp = self._blank_board()
+        moved = False
+
         for r in range(self.dim):
             value = -1
-            tempc = 0 if isLeft else self.dim - 1
+            cur_col = 0 if isLeft else self.dim - 1
             order = range(0, self.dim) if isLeft else range(
                 self.dim - 1, -1, -1)
             for c in order:
                 block = self.board[r][c]
                 if block == value:
-                    temp[r][tempc] = value + 1
+                    self.board[r][cur_col] = value + 1
                     self.score += 2**(value + 1)
                     if self.score > self.high_score:
                         self.high_score = self.score
-                    tempc += 1 if isLeft else -1
+                    cur_col += 1 if isLeft else -1
                     value = -1
+                    self.board[r][c] = 0
+                    moved = True
                 elif value == -1:
                     if block:
                         value = block
+                        if cur_col != c:
+                            self.board[r][c] = 0
+                            moved = True
                 elif block != value and block:
-                    temp[r][tempc] = value
-                    tempc += 1 if isLeft else -1
+                    self.board[r][cur_col] = value
+                    cur_col += 1 if isLeft else -1
                     value = block
-            temp[r][tempc] = value if value > 0 else 0
-        if self.board != temp:
-            self.board = temp
-            return True
-        return False
+                    if cur_col != c:
+                        self.board[r][c] = 0
+                        moved = True
+            self.board[r][cur_col] = value if value > 0 else 0
 
-    def _blank_board(self):
+        return moved
+
+    def _init_board(self):
         return [[0 for i in range(self.dim)] for i in range(self.dim)]
 
     def print_board(self):
@@ -174,8 +182,21 @@ class Board(object):
         time.sleep(3)
         terminate(self)
 
-    def set_size(self, screen_size):
-        self.scr_h = self.scr_w = (screen_size[0] + screen_size[1]) / 2
-        self.px_dim = self.scr_h - 2 * MARGIN_TOP
-        self.block_size = (self.px_dim - (self.dim - 1) * THICK) / self.dim
-        self.display = pygame.display.set_mode((self.scr_w, self.scr_h), RESIZABLE, 32)
+    def is_game_over(self):
+        # check horizontal move
+        for r in range(self.dim):
+            for c in range(self.dim - 1):
+                if self.board[r][c] == 0 or self.board[r][c + 1] == 0:
+                    return False
+                if self.board[r][c] == self.board[r][c + 1]:
+                    return False
+
+        # check vertical move
+        for c in range(self.dim):
+            for r in range(self.dim - 1):
+                if self.board[r][c] == 0 or self.board[r + 1][c] == 0:
+                    return False
+                if self.board[r][c] == self.board[r + 1][c]:
+                    return False
+
+        return True

@@ -25,41 +25,36 @@ def main():
             elif l[0] == 'HighScore':
                 high_score = int(float(l[-1]))
 
-    myBoard = board.Board(dim, high_score)
+    board_2048 = board.Board(dim, high_score)
 
     while 1:
         pygame.display.flip()
         pygame.display.set_caption(
-            '2048 for liying - score: %d  high score: %d' % (myBoard.score, myBoard.high_score))
-        myBoard.print_board()
-        test = myBoard.__deepcopy__()
-        if not (test.shift_vertical(isUp=True)
-                or test.shift_vertical(isUp=False)
-                or test.shift_horizontal(isLeft=True)
-                or test.shift_horizontal(isLeft=False)):
-            myBoard.game_over()
+            '2048 for liying - score: %d  high score: %d' % (board_2048.score, board_2048.high_score))
+        board_2048.print_board()
+        if board_2048.is_game_over():
+            board_2048.game_over()
 
         for event in pygame.event.get():
             if event.type == QUIT:
-                terminate(myBoard)
+                terminate(board_2048)
             elif event.type == KEYDOWN:
                 if event.key == K_ESCAPE:
-                    terminate(myBoard)
+                    terminate(board_2048)
                 if event.key == K_UP:
-                    if myBoard.shift_vertical(isUp=True):
-                        myBoard.add_tile()
+                    if board_2048.shift_vertical():
+                        board_2048.add_tile()
                 if event.key == K_DOWN:
-                    if myBoard.shift_vertical(isUp=False):
-                        myBoard.add_tile()
+                    if board_2048.shift_vertical(isUp=False):
+                        board_2048.add_tile()
                 if event.key == K_LEFT:
-                    if myBoard.shift_horizontal(isLeft=True):
-                        myBoard.add_tile()
+                    if board_2048.shift_horizontal():
+                        board_2048.add_tile()
                 if event.key == K_RIGHT:
-                    if myBoard.shift_horizontal(isLeft=False):
-                        myBoard.add_tile()
+                    if board_2048.shift_horizontal(isLeft=False):
+                        board_2048.add_tile()
             elif event.type == VIDEORESIZE:
-                myBoard.set_size(event.size)
-
+                board_2048.set_size(event.size)
 
 
 if __name__ == '__main__':
