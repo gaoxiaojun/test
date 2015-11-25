@@ -12,20 +12,25 @@ from main import terminate
 
 class Board(object):
 
-    def __init__(self, dim=4, high_score=0):
+    def __init__(self, dim=4, high_score=0, saved=None):
         self.dim = 4 if dim < 4 else dim
         self.high_score = high_score
         self.block_size = 4 * 120 / self.dim
         self.px_dim = self.dim * self.block_size + (self.dim - 1) * THICK
         self.scr_h = self.px_dim + 2 * MARGIN_TOP
         self.scr_w = self.px_dim + 2 * MARGIN_LEFT
+        self.new_row = self.new_column = None
 
         self.display = pygame.display.set_mode((self.scr_w, self.scr_h), 0, 32)
 
-        self.board = self._init_board()
-        self.add_tile()
-        self.add_tile()
-        self.score = 0
+        if saved and len(saved[0]) == self.dim:
+            self.board = saved[0][:]
+            self.score = saved[1]
+        else:
+            self.board = self._init_board()            
+            self.add_tile()
+            self.add_tile()
+            self.score = 0
 
     def add_tile(self):
         isFull = True

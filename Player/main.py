@@ -1,5 +1,6 @@
 import sys
 import os
+import pickle
 import pygame
 from pygame.locals import *
 import board
@@ -9,6 +10,13 @@ def terminate(board):
     with open('2048.ini', 'w') as f:
         f.write('Board=%d\n' % board.dim)
         f.write('HighScore=%d\n' % board.high_score)
+
+    with open('2048.dat', 'w') as f:
+        saved = []
+        saved.append(board.board)
+        saved.append(board.score)
+        pickle.dump(saved, f)
+
     pygame.quit()
     sys.exit()
 
@@ -25,7 +33,13 @@ def main():
             elif l[0] == 'HighScore':
                 high_score = int(float(l[-1]))
 
-    board_2048 = board.Board(dim, high_score)
+    try:
+        with open('2048.dat') as f:
+            saved = pickle.load(f)
+    except IOError:
+        saved = None
+
+    board_2048 = board.Board(dim, high_score, saved)
 
     while 1:
         pygame.display.flip()
