@@ -29,13 +29,17 @@ def main():
     pygame.init()
     pygame.key.set_repeat(200, 100)
 
-    with open('2048.ini') as f:
-        for line in f:
-            l = ' '.join(line.split('=')).split()
-            if l[0] == 'Board':
-                dim = int(float(l[-1]))
-            elif l[0] == 'HighScore':
-                high_score = int(float(l[-1]))
+    try:
+        with open('2048.ini') as f:
+            for line in f:
+                l = ' '.join(line.split('=')).split()
+                if l[0] == 'Board':
+                    dim = int(float(l[-1]))
+                elif l[0] == 'HighScore':
+                    high_score = int(float(l[-1]))
+    except IOError:
+        dim = 4
+        high_score = 0
 
     try:
         with open('2048.dat') as f:
