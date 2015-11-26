@@ -11,11 +11,15 @@ def terminate(board):
         f.write('Board=%d\n' % board.dim)
         f.write('HighScore=%d\n' % board.high_score)
 
-    with open('2048.dat', 'w') as f:
-        saved = []
-        saved.append(board.board)
-        saved.append(board.score)
-        pickle.dump(saved, f)
+    if not board.is_over:
+        with open('2048.dat', 'w') as f:
+            saved = []
+            saved.append(board.board)
+            saved.append(board.score)
+            pickle.dump(saved, f)
+    else:
+        if os.path.exists('2048.dat'):
+            os.remove('2048.dat')
 
     pygame.quit()
     sys.exit()
@@ -35,7 +39,10 @@ def main():
 
     try:
         with open('2048.dat') as f:
-            saved = pickle.load(f)
+            if os.path.getsize('2048.dat') == 0:
+                saved = None
+            else:
+                saved = pickle.load(f)
     except IOError:
         saved = None
 

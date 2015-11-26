@@ -22,6 +22,7 @@ class Board(object):
         self.new_row = self.new_column = None
 
         self.display = pygame.display.set_mode((self.scr_w, self.scr_h), 0, 32)
+        self.is_over = False
 
         if saved and len(saved[0]) == self.dim:
             self.board = saved[0][:]
@@ -204,4 +205,6 @@ class Board(object):
                 if self.board[r][c] == self.board[r + 1][c]:
                     return False
 
+        self.is_over = True
+        
         return True
