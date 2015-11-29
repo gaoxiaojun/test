@@ -22,6 +22,14 @@ C_YELL2 = (238, 197,  92)
 C_YELL3 = (236, 196,  73)
 C_YELL4 = (238, 188,  51)
 C_YELL5 = (238, 187,  34)
+C_BLUE1 = (0, 153, 153)
+C_BLUE2 = (0, 102, 102)
+C_BLUE3 = (0, 51, 102)
+C_BLUE4 = (0, 0, 102)
+C_PURPLE1 = (102, 102, 153)
+C_PURPLE2 = (102, 51, 102)
+C_PURPLE3 = (102, 0, 102)
+C_RED1 = (220, 20, 60)
 
 C_MAP = {0: C_EMPTY,
          1: C_WHITE,
@@ -35,11 +43,21 @@ C_MAP = {0: C_EMPTY,
          9: C_YELL3,
          10: C_YELL4,
          11: C_YELL5,
-         12: C_BLACK,
-         13: C_BLACK,
-         14: C_BLACK,
-         15: C_BLACK,
-         16: C_BLACK}
+         12: C_BLUE1,
+         13: C_BLUE2,
+         14: C_BLUE3,
+         15: C_BLUE4,
+         16: C_PURPLE1,
+         17: C_PURPLE2,
+         18: C_PURPLE3,
+         19: C_RED1,
+         20: C_BLACK,
+         21: C_BLACK,
+         22: C_BLACK,
+         23: C_BLACK,
+         24: C_BLACK,
+         25: C_BLACK,
+         26: C_BLACK}
 
 FONT_SIZE = {1: 100,
              2:  80,

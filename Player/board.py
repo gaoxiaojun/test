@@ -159,7 +159,7 @@ class Board(object):
                 if block:
                     length = len(str(2 ** block))
                     textMaker = pygame.font.Font(os.path.join(
-                        sys.path[0], "clearsans.ttf"), int(FONT_FACTOR[length] * self.block_size))
+                        sys.path[0], "clearsans.ttf"), self.block_size / length)
                     if r == self.new_row and c == self.new_column:
                         textColor = C_BRRED
                     else:
