@@ -277,7 +277,7 @@ tags: [C++]
 
 继承类定义一个和基类虚函数同名但是参数不同的函数是合法的。编译器认为这样的函数独立于基类的虚函数。
 
-新标准下我们可以在继承类中指定虚函数为**override**。编译器会拒绝程序如果函数标为**override**却没有覆盖一个已存在的虚函数。
+新标准下我们可以在继承类中指定虚函数为**override**。编译器会拒绝程序如果函数标注为**override**却没有覆盖一个已存在的虚函数。
 
     struct B {
         virtual void f1(int) const;
@@ -321,10 +321,12 @@ tags: [C++]
 >**注解**
 >通常，只有成员函数或友元函数里面的代码应该使用作用域操作符来避开虚机制。
 
+为什么想要避开虚机制？最常见的理由是一个派生类的虚函数调用基类的版本。这种情况下，基类版本做了继承层次所有类型的共同工作。派生类定义的版本只需做自己的额外工作。
+
 >**警告**
 >如果继承类虚函数想要调用基类版本的虚函数，却忽略了作用域操作符，将会导致无限递归。
 
-# 虚基类
+# 15.4 虚基类
 
 ## 纯虚函数
 
@@ -345,6 +347,8 @@ tags: [C++]
         double discount = 0.0;    //  fractional discount to apply
     };
 
+虽然我们不能直接定义Disc_quote对象，但是Disc_quote的派生类会使用Disc_quote的构造函数构造Disc_quote部分。
+
 值得注意的是我们可以提供纯虚函数的定义，但是必须定义在类外面。
 
 ## 有纯虚函数的类为虚基类
@@ -355,14 +359,31 @@ tags: [C++]
     Disc_quote discounted; // error: can't define a Disc_quote object
     Bulk_quote bulk;       // ok: Bulk_quote has no pure virtual functions
 
+继承自虚基类的类必须覆盖纯虚函数，否则这个类也是虚基类。
+
 ## 派生类构造函数只初始化其直接基类
+
+    // the discount kicks in when a specified number of copies of the same book are sold
+    // the discount is expressed as a fraction to use to reduce the normal price
+    class Bulk_quote : public Disc_quote {
+    public:
+        Bulk_quote() = default;
+        Bulk_quote(const std::string& book, double price,
+                  std::size_t qty, double disc):
+              Disc_quote(book, price, qty, disc) { }
+        // overrides the base version to implement the bulk purchase discount policy
+        double net_price(std::size_t) const override;
+    };
 
 每一个类控制自己类对象的初始化。
 
 >**关键概念：重构**
->重构在面向对象程序里面很常见。
+>添加Disc_quote到Quote继承层次是重构的一个例子。重构包含重新设计类层次，从一个类移动操作或数据到另一个类。重构在面向对象程序里面很常见。
+>值得注意的是尽管我们改变了继承层次，使用Bulk_quote或Quote的代码不需要改变。
 
-# 访问控制和继承
+# 15.5 访问控制和继承
+
+就像每一个类控制自己成员的初始化，每一个类也控制其成员对派生类是否可访问。
 
 ## protected成员
 
@@ -426,7 +447,7 @@ tags: [C++]
         int use_base() { return prot_mem; }
     };
 
-## 派生类到基类的转换的可访问性
+## 派生类到基类转换的可访问性
 
 假设D继承B：
 *   用户代码可以使用派生类到基类的转换当D公开继承B，私有继承或保护继承都不行。
@@ -438,7 +459,7 @@ tags: [C++]
 
 ## 友元和继承
 
-就像友元不能传递，友元也不能继承。
+就像友元不能传递，友元也不能继承。基类的友元对派生类没有特殊访问权限，派生类的友元对基类也没有特殊访问权限。
 
     class Base {
         // added friend declaration; other members as before
@@ -455,7 +476,9 @@ tags: [C++]
         int f3(Sneaky s) { return s.prot_mem; } // ok: Pal is a friend
     };
 
-当类A将类B作为友元时，只有类B被授予了友元关系。类B的基类或子类都没有A的特殊访问权限。
+f3的合法看似惊人，但是它直接遵循每一个类控制其成员的访问这条规则。类Pal是基类Base的友元，因此Pal可以访问基类对象的成员。这种访问包含嵌套在派生类对象中基类部分。
+
+当一个类将另一个类作为友元，只有这个类被赋予了友元关系，其基类或者子类都没有友元关系。
 
     // D2 has no access to protected or private members in Base
     class D2 : public Pal {
@@ -500,12 +523,12 @@ tags: [C++]
     struct D1 : Base { /* ...   */ };   // public inheritance by default
     class D2 : Base { /* ...   */ };    // private inheritance by default
 
-一个常见的误解是使用**struct**和**class**定义的类有深层次的不同。仅有的不同就是成员的默认访问级别和派生类默认访问不同。没有其它差别。
+一个常见的误解是使用**struct**和**class**定义的类有深层次的不同。唯一的不同就是成员的默认访问级别和默认继承访问限定符，没有其它差别。
 
 >**最佳实践**
 >类私有继承必须显式指定**private**而不是依赖默认行为。显式指定可以清晰的说明**private**继承是有意的而不是疏忽。
 
-# 继承下的类作用域
+# 15.6 继承下的类作用域
 
 每一个类定义自己的作用域，作用域里面定义其成员。在继承下，派生类的作用域嵌套在基类作用域里面。如果一个名字在派生类作用域找不到，则搜索外围基类作用域。正是这种分层嵌套的类作用域允许派生类成员使用基类成员就好像这些成员是派生类的一部分一样。
 
@@ -544,7 +567,7 @@ isbn的名字查找如下：
 
 ## 名字冲突和继承
 
-和其它作用域一样，继承类可以重用其直接或间接基类中的一个名字。和往常一样，定义在内部作用域的名字，隐藏了外部作用域名字的使用。
+和其它作用域一样，继承类可以重用其直接或间接基类中的一个名字。和往常一样，定义在内部作用域(派生类）的名字，隐藏了外部作用域（基类）名字的使用。
 
     struct Base {
         Base(): mem(0) { }
@@ -562,19 +585,23 @@ isbn的名字查找如下：
 >**注解**
 >与基类成员同名的派生类成员隐藏了基类成员的直接使用。
 
-## 使用作用域操作符使用隐藏成员
+## 使用作用域操作符使用被隐藏成员
+
+我们可以使用作用域操作符来使用被隐藏的基类成员。
 
     struct Derived : Base {
         int get_base_mem() { return Base::mem; }
         // ...
     };
 
+作用域操作符覆盖正常的名字查找，并指引编译器从指定的作用域开始查找。
+
 >**最佳实践**
 >除了覆盖继承的虚函数，基类通常不应该重用已经在基类中定义过的名字。
 
 ## 名字查找发生在类型检查之前
 
-定义在派生类的同名函数不重载基类的函数。基类成员被隐藏了，即使参数列表不一样。
+定义在派生类的同名函数不重载基类的函数。基类成员被隐藏了，即使参数列表不一样。一旦名字被找到，编译器不再继续查找。
 
     struct Base {
         int memfcn();
@@ -629,11 +656,13 @@ isbn的名字查找如下：
 
 派生类可以覆盖0个或多个继承的重载函数。如果派生类想要使所有重载版本可用，则必须覆盖所有的函数或所有函数不覆盖。
 
-有时候只想覆盖一些重载函数，派生类可以提供一个**using**声明给重载的成员。一个**using**声明指示指定一个名字，不带参数列表。因此，**using**声明将基类的重载函数都加到派生类的作用域。派生类只需定义那些想要覆盖的函数。
+有时候只想覆盖一些重载函数，派生类可以提供一个**using**声明给重载的成员。一个**using**声明指定一个名字，不带参数列表。因此，**using**声明将基类的重载函数都加到派生类的作用域。派生类只需定义那些想要覆盖的函数。
 
-# 构造函数和复制控制
+# 15.7 构造函数和复制控制
 
-## 虚析构函数
+像其它类一样，继承层次中的类控制其对象的创建，复制，移动，赋值和销毁。如果一个类没有定义自己的复制控制操作，编译器将合成这些操作。同样这些合成的操作可能是**deleted**的函数。
+
+## 15.7.1 虚析构函数
 
 继承给基类的复制控制主要的直接影响是基类通常应该定义一个虚析构函数。
 
@@ -651,12 +680,254 @@ isbn的名字查找如下：
 >**警告**
 >如果基类析构函数不是**virtual**的， **delete**基类指针指向派生类对象是**undefined**。
 
+对于如果一个类需要析构函数，它也需要复制和赋值操作符这个规则，基类的析构函数是个重要例外。
+
 ### 虚析构函数关闭了合成的Move
 
 如果一个类定义了虚析构函数，即使是**= default**使用合成版本，则编译器不会合成**move**操作。
 
-## 合成复制控制和继承
+## 15.7.2 合成复制控制和继承
 
 基类或派生类中合成的复制控制成员和任何其它合成的复制控制成员一样：逐个初始化，复制或销毁类成员。另外，这些成员使用基类的相应操作初始化，复制或销毁其对象的直接基类部分。
 
+值得注意的是基类的成员是否是合成的或用户定义的并没有关系。重要的是相应的成员是可访问的且不是一个被删除的函数。
 
+### 基类和派生类中被删除的复制控制成员
+
+基类或者派生类中合成的构造函数或任何复制控制成员，跟其它类的原因一样，都可能被定义为被删除的。另外基类定义的方式会导致派生类的成员被定义为被删除的：
+
+* 如果基类的默认构造函数，复制构造函数，赋值操作符或析构函数是被删除的或不能访问，则派生类中相应的成员被定义为被删除的，因为编译器无法使用基类的成员来构造，赋值或销毁派生类对象的基类部分。
+* 如果基类有一个不能访问的或被删除的析构函数，则派生类中合成的默认构造函数和复制构造函数被定义为被删除的，因为没有办法销毁派生类对象的基类部分。
+* 编译器不会合成一个被删除的移动操作。如果基类的移动操作是被删除的或不能访问，则派生类中的移动操作是被删除的，因为基类部分不能被移动。如果基类的析构函数是被删除的或不能访问，则派生类的移动构造函数是被删除的。
+
+
+    class B {
+    public:
+        B();
+        B(const B&) = delete;
+        // other members, not including a move constructor
+    };
+    class D : public B {
+        // no constructors
+    };
+    D d;     // ok: D's synthesized default constructor uses B's default constructor
+    D d2(d); // error: D's synthesized copy constructor is deleted
+    D d3(std::move(d)); // error: implicitly uses D's deleted copy constructor
+
+### 移动操作和继承
+
+我们已经看到，大多数基类定义了一个虚析构函数。因此基类通常没有合成的移动操作，同样派生类也没有合成的移动操作。由于基类缺少移动操作而限制了派生类合成移动操作，如果合理基类一般应该定义移动操作。如果显式定义了移动操作，基类一般也要显式定义复制操作。
+
+    class Quote {
+    public:
+        Quote() = default;             // memberwise default initialize
+        Quote(const Quote&) = default; // memberwise copy
+        Quote(Quote&&) = default;      // memberwise copy
+        Quote& operator=(const Quote&) = default; // copy assign
+        Quote& operator=(Quote&&) = default;      // move assign
+        virtual ~Quote() = default;
+        // other members as before
+    };
+
+## 15.7.3 派生类复制控制成员
+
+初始化阶段，派生类的构造函数初始化派生类对象的基类部分和自己的成员。因此派生类的复制和移动构造函数必须复制和移动派生类对象的基类部分和自己的成员。类似地，派生类的赋值操作符必须赋值基类部分给派生类对象。
+
+不像构造函数和赋值操作符，析构函数只对派生类自己的申请的资源负责。
+
+> **警告**
+> 当派生类定义了复制和移动操作，这些操作负责整个派生类对象的复制和移动，包括基类成员。
+
+### 定义派生类复制和移动构造函数
+
+当我们为派生类定义一个复制或移动构造函数，我们通常使用相应的基类构造函数来初始化对象的基类部分：
+
+    class Base { /* ...    */ } ;
+    class D: public Base {
+    public:
+        // by default, the base class default constructor initializes the base part of an object
+        // to use the copy or move constructor, we must explicitly call that
+        // constructor in the constructor initializer list
+        D(const D& d): Base(d)      // copy the base members
+                     /* initializers for members of D */ { /* ...  */ }
+        D(D&& d): Base(std::move(d)) // move the base members
+                     /* initializers for members of D */ { /* ...  */ }
+    };
+
+> **警告**
+> 默认地，基类默认构造函数初始化派生类对象的基类部分。如果我们想要复制或移动基类部分，必须在派生类构造函数的初始化列表中显式使用基类的复制或移动构造函数。
+
+### 派生类赋值操作符
+
+和复制或移动构造函数一样，派生类的赋值操作符必须显式赋值其基类部分：
+
+    // Base::operator=(const Base&) is not invoked automatically
+    D &D::operator=(const D &rhs)
+    {
+        Base::operator=(rhs); // assigns the base part
+        // assign the members in the derived class, as usual,
+        // handling self-assignment and freeing existing resources as appropriate
+        return *this;
+    }
+
+值得注意的是派生类构造函数和赋值操作符可以使用基类的相应操作，不管基类是否定义了这些操作还是使用合成的版本。
+
+### 派生类析构函数
+
+一个对象的数据成员在析构函数执行完毕之后被隐式销毁。类似地，对象的基类部分也是隐式销毁。因此和构造函数和赋值操作符不同的是，派生类析构函数只对销毁派生类申请的资源负责。
+
+    class D: public Base {
+    public:
+        // Base::~Base invoked automatically
+        ~D() { /* do what it takes to clean up derived members   */ }
+    };
+
+### 在构造函数和析构函数调用虚函数
+
+我们已经知道，派生类对象的基类部分先被构造。当基类构造函数在执行时，派生类部分没有初始化。同样，派生类对象以相反的顺序被销毁，因此当基类的析构函数运行时，派生类部分已经被销毁。因此当这些基类成员在执行时，对象是不完整的。
+
+为了适应这种不完整性，编译器在构造和析构之间将对象的类型看成是变化的。当对象被构造时，将它的类型看成和构造函数一样的类型，虚函数的调用会绑定到和构造函数一样的类型。对于析构函数也一样。
+
+> **注解**
+> 如果构造函数和析构函数调用一个虚函数，虚函数运行版本是相对于构造函数或析构函数自己类型的版本。
+
+## 15.7.4 继承的构造函数
+
+新标准下，派生类可以重用基类定义的构造函数。和只能初始化直接基类的原因一样，一个类只能继承直接基类的构造函数，不能继承默认的复制和移动构造函数。使用**using**声明指定继承基类的构造函数。
+
+    class Bulk_quote : public Disc_quote {
+    public:
+        using Disc_quote::Disc_quote; // inherit Disc_quote's constructors
+        double net_price(std::size_t) const;
+    };
+
+**using**声明只是使一个名字在当前作用域可见。当应用到构造函数，一个**using**声明引起编译器生成代码。编译器生成对应于每一个基类构造函数的派生类构造函数。这些编译器生成的构造函数具有以下形式：
+
+    derived(parms) : base(args) { }
+
+在Bulk_quote类，继承的构造函数如下：
+
+    Bulk_quote(const std::string& book, double price,
+              std::size_t qty, double disc):
+          Disc_quote(book, price, qty, disc) { }
+
+### 继承构造函数的特征
+
+不像对普通成员使用**using**声明，构造函数**using**声明不会改变继承构造函数的访问级别。而且，**using**声明不能指定**explicit**或**constexpr**。如果构造函数在基类中是**explicit**或**constexpr**，则继承构造函数有一样的属性。
+
+如果基类构造函数有默认实参，这些参数不会被继承。相反，派生类得到多个继承构造函数，每一个有默认实参的参数被相继忽略。比如，如果基类有一个2个参数的构造函数，第2个参数有默认实参，则派生类获得2个构造函数：一个带2个参数（没有默认实参）和一个带单一参数对应于基类最左边，非默认的参数的构造函数。
+
+如果基类有多个构造函数，则除了两个例外，派生类继承基类每一个构造函数。第一个例外是派生类继承一些构造函数并定义其它构造函数自己的版本。如果派生类定义了一个与基类构造函数参数一样的构造函数，那么这个构造函数不会被继承。第二个例外是默认，复制和移动构造函数不会被继承。一个继承构造函数不会被看作用户定义的构造函数。因此，一个只有继承构造函数的类会合成默认构造函数。
+
+# 15.8 容器和继承
+
+当我们使用一个容器来存储来自继承层次的对象，通常我们必须间接存储这些对象。我们不能把继承相关的类型对象直接放进容器，因为没有办法定义一个容器存放不同类型的元素。
+
+vector不能存放Quote类型可能不明显。这种情况下，我们能把Bulk_quote对象放进容器，但是这些对象不再是Bulk_quote对象了：
+
+    vector<Quote> basket;
+    basket.push_back(Quote("0-201-82470-1", 50));
+    // ok, but copies only the Quote part of the object into basket
+    basket.push_back(Bulk_quote("0-201-54848-8", 50, 10, .25));
+    // calls version defined by Quote, prints 750, i.e., 15 * $50
+    cout << basket.back().net_price(15) << endl;
+
+> **警告**
+> 因为派生类对象赋值给基类对象被切掉，容器和继承相关的类型不能很好的融合。
+
+## 将（智能）指针而不是对象放进容器
+
+当我们需要容器存放继承相关的对象，定义容器存放基类的指针。和往常一样，指针指向的对象的动态类型可能是基类类型或派生类类型：
+
+    vector<shared_ptr<Quote>> basket;
+    basket.push_back(make_shared<Quote>("0-201-82470-1", 50));
+    basket.push_back(
+        make_shared<Bulk_quote>("0-201-54848-8", 50, 10, .25));
+    // calls the version defined by Quote; prints 562.5, i.e., 15 * $50 less the discount
+    cout << basket.back()->net_price(15) << endl;
+
+就像我们能够转换指向派生类对象的普通指针为指向基类的普通指针，我们也能转换指向派生类的智能指针为指向基类的智能指针。
+
+## 15.8.1 编写Basket类
+
+C++中的面向对象编程的一个讽刺是我们不能使用对象直接支持它。反而，我们必须使用指针和引用。由于指针强加给程序的复杂性，我们通常定义辅助的类来帮助管理复杂性。
+
+    class Basket {
+    public:
+        // Basket uses synthesized default constructor and copy-control members
+        void add_item(const std::shared_ptr<Quote> &sale)
+            { items.insert(sale); }
+        // prints the total price for each book and the overall total for all items in the
+    basket
+        double total_receipt(std::ostream&) const;
+    private:
+        // function to compare shared_ptrs needed by the multiset member
+        static bool compare(const std::shared_ptr<Quote> &lhs,
+                            const std::shared_ptr<Quote> &rhs)
+        { return lhs->isbn() < rhs->isbn(); }
+        // multiset to hold multiple quotes, ordered by the compare member
+        std::multiset<std::shared_ptr<Quote>, decltype(compare)*>
+                      items{compare};
+    };
+
+### 定义Basket的成员
+
+    double Basket::total_receipt(ostream &os) const
+    {
+        double sum = 0.0;   // holds the running total
+        // iter refers to the first element in a batch of elements with the same ISBN
+        // upper_bound returns an iterator to the element just past the end of that batch
+        for (auto iter = items.cbegin();
+                  iter != items.cend();
+                  iter = items.upper_bound(*iter)) {
+            // we know there's at least one element with this key in the Basket
+            // print the line item for this book
+            sum += print_total(os, **iter, items.count(*iter));
+        }
+        os << "Total Sale: " << sum << endl; // print the final overall
+    total
+        return sum;
+    }
+
+### 隐藏指针
+
+Basket的用户仍然需要处理动态分配的内存，因为add_item带一个shared_ptr参数。
+
+    Basket bsk;
+    bsk.add_item(make_shared<Quote>("123", 45));
+    bsk.add_item(make_shared<Bulk_quote>("345", 45, 3, .15));
+
+我们下一步将重定义add_item来接收Quote对象而不是shared_ptr。
+
+    void add_item(const Quote& sale);  // copy the given object
+    void add_item(Quote&& sale);       // move the given object
+
+### 模拟虚复制
+
+我们将通过给Quote类一个虚成员分配自己的拷贝来解决这个问题。
+
+    class Quote {
+    public:
+        // virtual function to return a dynamically allocated copy of itself
+        // these members use reference qualifiers; see §13.6.3 (p. 546)
+        virtual Quote* clone() const & {return new Quote(*this);}
+        virtual Quote* clone() && {return new Quote(std::move(*this));}
+        // other members as before
+    };
+    class Bulk_quote : public Quote {
+        Bulk_quote* clone() const & {return new Bulk_quote(*this);}
+        Bulk_quote* clone() && { return new Bulk_quote(std::move(*this));}
+        // other members as before
+    };
+
+    class Basket {
+    public:
+        void add_item(const Quote& sale) // copy the given object
+          { items.insert(std::shared_ptr<Quote>(sale.clone())); }
+        void add_item(Quote&& sale)      // move the given object
+          { items.insert(
+              std::shared_ptr<Quote>(std::move(sale).clone())); }
+        // other members as before
+    };
+
+# 15.9 文本查询重温
