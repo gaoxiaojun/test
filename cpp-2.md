@@ -165,3 +165,106 @@ Boolean值是整形的一个特殊情况。尽管由常量**True**和**False**�
 # 2.8 列表和元组
 
 列表和元组可以被认为是通用“数组”，使用它可以存放任意数量的任意Python对象，其元素顺序存放并通过下标访问。
+
+列表和元组有一些主要的区别。列表由中括号（[]）括起来，其元素和大小可以改变。元组由括号（()）括起来且不能更新。元组可以认为是“只读”列表。像字符串一样可以使用切片操作符（[]和[:]）获取子集。
+
+# 2.9 字典
+
+字典是Python的映射类型，像Perl里面的关联数组或哈希一样工作，它由键值对组成。键可以是几乎任何Python类型，但是通常是数字或字符串。另一方面，值可以是任意Python对象。字典由花括号（{}）括起来。
+
+    >>> aDict = {'host': 'earth'} # create dict
+    >>> aDict['port'] = 80 # add to dict
+    >>> aDict
+    {'host': 'earth', 'port': 80}
+    >>> aDict.keys()
+    ['host', 'port']
+    >>> aDict['host']
+    'earth'
+    >>> for key in aDict:
+    ... print key, aDict[key]
+    ...
+    host earth
+    port 80
+
+# 2.10 代码块使用缩进
+
+代码块由缩进指定而不是用像花括号这样的符号。没有额外的符号，程序更容易阅读。同样，缩进清晰地指出代码属于哪一个代码块。当然代码块可以由单个语句组成。
+
+# 2.11 if语句
+
+标准**if**条件语句遵循下面语法：
+
+    if expression:
+        if_suite
+
+如果表达式非0或True，则if_suite被执行。
+
+    if x < .0:
+        print '”x” must be at least 0!'
+
+Python支持**else**语句，和**if**一起使用：
+
+    if expression:
+        if_suite
+    else:
+        else_suite
+
+Python有一个“else-if”书写为**elif**使用下面的语法：
+
+    if expression1:
+        if_suite
+    elif expression2:
+        elif_suite
+    else:
+        else_suite
+
+# 2.12 while循环
+
+标准while条件循环语句类似**if**，语法如下：
+
+    while expression:
+        while_suite
+
+while_suite语句在循环里面一直被执行直到expression变为0或False。
+
+    >>> counter = 0
+    >>> while counter < 3:
+    ...     print 'loop #%d' % (counter)
+    ...     counter += 1
+    loop #0
+    loop #1
+    loop #2
+
+# 2.13 for循环和range()内置函数
+
+Python中的for循环更像一个脚本语言中foreach迭代类型循环。Python的for接受一个iterable并遍历每一个元素。
+
+    >>> for item in ['e-mail', 'net-surfing', 'homework',
+    'chat']:
+    ...     print item
+    e-mail
+    net-surfing
+    homework
+    chat
+
+**print**语句默认在每一行结尾添加一个换行符。可以在**print**语句后面加一个逗号抑制这个默认行为。
+
+    print 'I like to use the Internet for:'
+    for item in ['e-mail', 'net-surfing', 'homework', 'chat']:
+        print item,
+    print
+
+**print**语句中逗号分隔的元素当它们被显示时会自动包含一个分隔的空格。
+
+Python提供**range()**内置函数为我们生成一个列表。
+
+    >>> for eachNum in range(3):
+    ...     print eachNum
+    >>> for c in 'abc':
+    ...     print c
+    >>> for i in range(len('abc')):
+    ...     print foo[i], '(%d)' % i
+    >>> for i, ch in enumerate(foo):s
+    ...     print ch, '(%d)' % i
+
+# 2.14 列表推导式
