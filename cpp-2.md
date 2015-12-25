@@ -72,7 +72,7 @@ Python的**print**语句（2.x）或函数（3.x）给用户显示程序输出�
     ... print 'Hello World!' # another comment
     Hello World!
 
-有一种特殊的注释被称为文档字符串。在一个模块，类或函数开头独立的字符串就是文档字符串。文档字符串可以在运行时访问并用来自动生成文档。
+有一种特殊的注释被称为文档字符串。在一个模块，类或函数开头独立的字符串就是文档字符串。文档字符串可以在运行时访问并用来自动生成文档。可以使用object.__doc__访问注释文档。
 
 # 2.4 操作符
 
@@ -268,3 +268,175 @@ Python提供**range()**内置函数为我们生成一个列表。
     ...     print ch, '(%d)' % i
 
 # 2.14 列表推导式
+
+列表推导式使用一个for循环生成一个列表：
+
+    >>> squared = [x ** 2 for x in range(4)]
+    >>> for i in squared:
+    ...     print i
+
+列表推导式甚至可以选择性的包含什么进新列表：
+
+    >>> sqdEvens = [x ** 2 for x in range(8) if not x % 2]
+
+# 2.15 文件和open()，file()内置函数
+
+如何打开一个文件：
+
+    handle = open(file_name, access_mode = 'r')
+
+file_name变量包含字符串类型的文件名，access_mode可以是读（r），写（w），追加（a）。其它标志包括读写（+），二进制访问（b）。
+
+如果open()成功，一个文件对象被返回。所有后续文件访问必须通过这个文件对象。
+
+> **核心笔记：什么是属性？**
+> 属性是关联到一块数据的项。属性可以是简单数据值或可执行对象比如函数或方法。通过点号访问属性：object.attribute。
+
+    filename = raw_input('Enter file name: ')
+    fobj = open(filename, 'r')
+    data = fobj.readlines()
+    fobj.close()
+    for eachLine in data:
+        print eachLine,
+
+**file()**内置函数最近才添加进Python。它和**open()**是相同的，但是这种命名指示它是一个工厂函数（生产文件对象），类似于**int()**生产整数对象和**dict()**生产字典对象。
+
+# 2.16 错误和异常
+
+语法错误在编译时检查，但是Python也允许程序运行期间发现错误。当一个错误被检测，Python解释器抛出一个异常。使用**try-except**语句添加错误检测或异常处理到你的代码。
+
+    try:
+        filename = raw_input('Enter file name: ')
+        fobj = open(filename, 'r')
+        for eachLine in fobj:
+            print eachLine,
+        fobj.close()
+    except IOError, e:
+        print 'file open error:', e
+
+程序员可以显式使用**raise**抛出一个异常。
+
+# 2.17 函数
+
+和其它语言一样，Python中的函数使用函数操作符（()）调用，函数必须在调用前声明。不需要声明函数返回类型或显式返回值，如果没有返回值，Python返回**None**。
+
+Python可以被认为是“引用调用”。这意味着函数内任何对函数参数的改变会影响到原来的对象。然而在Python中，这实际上取决于传递的对象类型。如果这个对象允许更新，则它表现为我们预期的“引用调用”，但是如果对象的值不能改变，则它表现为“传值调用”。
+
+## 如何定义函数
+
+    def function_name([arguments]):
+        "optional documentation string"
+        function_suite
+
+声明一个函数的语法由**def**关键字，跟着函数名和任意数量函数可能接收的参数组成。
+
+    def addMe2Me(x):
+        'apply + operation to argument'
+        return (x + x)
+
+# 默认实参
+
+函数可以有具有默认值的参数。如果参数的值没有提供，将会使用默认值：
+
+    >>> def foo(debug=True):
+    ...     'determine if in debug mode with default argument'
+    ...     if debug:
+    ...         print 'in debug mode'
+    ...     print 'done'
+    >>> foo()
+    in debug mode
+    done
+    >>> foo(False)
+    done
+
+# 2.18 类
+
+类是面向对象编程的核心部分，并作为一个“容器”服务相关的数据和逻辑。
+
+## 如何定义类
+
+    class ClassName(base_class[es]):
+        "optional documentation string"
+        static_member_declarations
+        method_declarations
+
+类使用**class**关键字声明。基类或父类可选，如果没有，使用object作为基类。
+
+    class FooClass(object):
+        """my very first class: FooClass"""
+        version = 0.1 # class (data) attribute
+
+        def __init__(self, nm='John Doe'):
+            """constructor"""
+            self.name = nm # class instance (data) attribute
+            print 'Created a class instance for', nm
+
+        def showname(self):
+            """display instance attribute and class name"""
+            print 'Your name is', self.name
+            print 'My name is', self.__class__.__name__
+
+        def showver(self):
+            """display class(static) attribute"""
+            print self.version # references FooClass.version
+
+        def addMe2Me(self, x): # does not use 'self'
+            """apply + operation to argument"""
+            return x + x
+
+**__init__()**方法一个默认提供的函数，当类实例创建的时候被调用，类似一个构造器并在对象实例化后被调用。**self**基本上是实例自己本身的句柄，其它面向对象语言通常使用**this**。
+
+## 如何创建实例
+
+创建实例看起来像调用一个函数，并拥有一样的语法。
+
+    >>> foo1 = FooClass()
+    Created a class instance for John Doe
+    >>> foo1.showname()
+    Your name is John Doe
+    My name is FooClass
+    >>> foo1.showver()
+    0.1
+    >>> print foo1.addMe2Me(5)
+    10
+    >>> print foo1.addMe2Me('xyz')
+    xyzxyz
+
+# 2.19 模块
+
+一个模块是物理组织和区分相关的Python代码到独立文件的逻辑方式。一个模块可以包含可执行代码，函数，类或所有任何以上的。
+
+当你创建了一个Python源文件，模块名和文件名去除扩展名一样。一旦一个模块创建了，你可以使用**import**语句导入模块。
+
+    import module_name
+
+一旦导入模块，模块的属性（函数和变量等）可以用点号访问：
+
+    module.function()
+    module.variable
+
+    >>> import sys
+    >>> sys.stdout.write('Hello World!\n')
+    Hello World!
+    >>> sys.platform
+    'win32'
+    >>> sys.version
+    '2.4.2 (#67, Sep 28 2005, 10:51:12) [MSC v.1310 32 bit
+    (Intel)]'
+
+> **核心笔记：PEP是什么？**
+> PEP是Python Enhancement Proposal。它是新特性被引进到未来版本的Python的一种方式。[PEP链接](http://python.org/dev/peps)
+
+# 2.20 有用的函数
+
+|函数  |描述|
+|------------|:----------|
+|dir([obj])|显示obj的属性或全局变量的名字如果参数未提供|
+|help([obj])|显示obj的帮助文档或进入交互帮助界面如果参数未提供|
+|int(obj)|将obj转换为整形|
+|len(obj)|返回obj的长度|
+|open(fn, mode)|用mode打开文件fn（'r'读，'w'写）|
+|range([start,]stop[,step])|返回一个整形列表，从start开始到stop（不包括stop），每次增量step；start默认为0，step默认为1|
+|raw_input(str)|等待用户输入，str可选|
+|str(obj)|将obj转换为字符串|
+|type(obj)|返回obj的类型（本身是一个type对象）|
