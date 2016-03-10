@@ -1,0 +1,340 @@
+; SLIME 2013-06-26
+CL-USER> (defun summit (lst)
+           (if (null lst)
+               'done
+               ((let ((x (car lst)))
+                  (if (null x)
+                      (summit (cdr lst))
+                      (+ x (summit (cdr lst))))))))
+; in: DEFUN SUMMIT
+;     ((LET ((X (CAR LST)))
+;        (IF (NULL X)
+;            (SUMMIT (CDR LST))
+;            (+ X (SUMMIT #)))))
+; 
+; caught ERROR:
+;   illegal function call
+; 
+; compilation unit finished
+;   caught 1 ERROR condition
+SUMMIT
+CL-USER> (setf x (cons 'a nil))
+
+; in: SETF X
+;     (SETF X (CONS 'A NIL))
+; ==>
+;   (SETQ X (CONS 'A NIL))
+; 
+; caught WARNING:
+;   undefined variable: X
+; 
+; compilation unit finished
+;   Undefined variable:
+;     X
+;   caught 1 WARNING condition
+(A)
+CL-USER> x
+(A)
+CL-USER> (car x)
+A
+CL-USER> (cdr x)
+NIL
+CL-USER> (setf y (list 'a 'b 'c))
+
+; in: SETF Y
+;     (SETF Y (LIST 'A 'B 'C))
+; ==>
+;   (SETQ Y (LIST 'A 'B 'C))
+; 
+; caught WARNING:
+;   undefined variable: Y
+; 
+; compilation unit finished
+;   Undefined variable:
+;     Y
+;   caught 1 WARNING condition
+(A B C)
+CL-USER> (car y)
+A
+CL-USER> (cdr y)
+(B C)
+CL-USER> (setf z (list 'a (list 'b 'c) 'd))
+
+; in: SETF Z
+;     (SETF Z (LIST 'A (LIST 'B 'C) 'D))
+; ==>
+;   (SETQ Z (LIST 'A (LIST 'B 'C) 'D))
+; 
+; caught WARNING:
+;   undefined variable: Z
+; 
+; compilation unit finished
+;   Undefined variable:
+;     Z
+;   caught 1 WARNING condition
+(A (B C) D)
+CL-USER> (cdr z)
+((B C) D)
+CL-USER> (consp x)
+T
+CL-USER> (consp y)
+T
+CL-USER> (consp z)
+T
+CL-USER> (defun our-listp (x)
+           (or (null x) (consp x)))
+OUR-LISTP
+CL-USER> (our-listp x)
+T
+CL-USER> (our-listp 'a)
+NIL
+CL-USER> (defun our-atom (x)
+           (not consp(x)))
+; in: DEFUN OUR-ATOM
+;     (NOT CONSP (X))
+; 
+; caught WARNING:
+;   The function was called with two arguments, but wants exactly one.
+
+;     (SB-INT:NAMED-LAMBDA OUR-ATOM
+;         (X)
+;       (BLOCK OUR-ATOM (NOT CONSP (X))))
+; 
+; caught STYLE-WARNING:
+;   The variable X is defined but never used.
+
+; in: DEFUN OUR-ATOM
+;     (NOT CONSP (X))
+; 
+; caught WARNING:
+;   undefined variable: CONSP
+
+;     (X)
+; 
+; caught STYLE-WARNING:
+;   undefined function: X
+; 
+; compilation unit finished
+;   Undefined function:
+;     X
+;   Undefined variable:
+;     CONSP
+;   caught 2 WARNING conditions
+;   caught 2 STYLE-WARNING conditions
+OUR-ATOM
+CL-USER> (defun our-atomp (x)
+           (not (consp x)))
+OUR-ATOMP
+CL-USER> (our-atomp 'a)
+T
+CL-USER> (our-atomp ())
+T
+CL-USER> (consp ())
+NIL
+CL-USER> (our-atomp '(a b c))
+NIL
+CL-USER> (our-atomp nil)
+T
+CL-USER> (our-listp nil)
+T
+CL-USER> (and (our-atomp nil) (our-listp nil))
+T
+CL-USER> (eql (cons 'a nil) (cons 'a nil))
+NIL
+CL-USER> (eql '(a) '(a))
+NIL
+CL-USER> (equal (cons 'a nil) (cons 'a nil))
+T
+CL-USER> (eql x x)
+T
+CL-USER> (defun our-equal (x y)
+           (or (eql x y)
+               (and (consp x)
+                    (consp y)
+                    (our-equal (car x) (car y))
+                    (our-equal (cdr x) (cdr y)))))
+OUR-EQUAL
+CL-USER> x
+(A)
+CL-USER> y
+(A B C)
+CL-USER> z
+(A (B C) D)
+CL-USER> (our-equal x y)
+NIL
+CL-USER> (our-equal x (cons 'a nil))
+T
+CL-USER> (setf x (copy-list y))
+
+; in: SETF X
+;     (SETF X (COPY-LIST Y))
+; ==>
+;   (SETQ X (COPY-LIST Y))
+; 
+; caught WARNING:
+;   undefined variable: X
+
+;     (COPY-LIST Y)
+; 
+; caught WARNING:
+;   undefined variable: Y
+; 
+; compilation unit finished
+;   Undefined variables:
+;     X Y
+;   caught 2 WARNING conditions
+(A B C)
+CL-USER> x
+(A B C)
+CL-USER> y
+(A B C)
+CL-USER> (eql x y)
+NIL
+CL-USER> (equal x y)
+T
+CL-USER> (our-equal x y)
+T
+CL-USER> (defun our-copy-list (lst)
+           (cons (car lst) (our-copy-list (cdr lst))))
+OUR-COPY-LIST
+CL-USER> z
+(A (B C) D)
+CL-USER> (setf z (our-copy-list x))
+
+; in: SETF Z
+;     (OUR-COPY-LIST X)
+; 
+; caught WARNING:
+;   undefined variable: X
+
+;     (SETF Z (OUR-COPY-LIST X))
+; ==>
+;   (SETQ Z (OUR-COPY-LIST X))
+; 
+; caught WARNING:
+;   undefined variable: Z
+; 
+; compilation unit finished
+;   Undefined variables:
+;     X Z
+;   caught 2 WARNING conditions
+Control stack guard page temporarily disabled: proceed with caution
+; Evaluation aborted on #<SB-KERNEL::CONTROL-STACK-EXHAUSTED {1006515C73}>.
+CL-USER> (defun our-copy-list (lst)
+           (if (null lst)
+               nil
+               (cons (car lst) (our-copy-list (cdr lst)))))
+STYLE-WARNING: redefining COMMON-LISP-USER::OUR-COPY-LIST in DEFUN
+OUR-COPY-LIST
+CL-USER> (setf z (our-copy-list x))
+
+;     (OUR-COPY-LIST X)
+; 
+; caught WARNING:
+;   undefined variable: X
+
+;     (SETF Z (OUR-COPY-LIST X))
+; ==>
+;   (SETQ Z (OUR-COPY-LIST X))
+; 
+; caught WARNING:
+;   undefined variable: Z
+; 
+; compilation unit finished
+;   Undefined variables:
+;     X Z
+;   caught 2 WARNING conditions
+(A B C)
+CL-USER> x
+(A B C)
+CL-USER> (and (equal x y) (equal x z))
+
+; in: AND (EQUAL X Y)
+;     (EQUAL X Z)
+; 
+; caught WARNING:
+;   undefined variable: X
+; 
+; caught WARNING:
+;   undefined variable: Z
+; 
+; compilation unit finished
+;   Undefined variables:
+;     X Z
+;   caught 2 WARNING conditions
+T
+CL-USER> (or (eql x y) (eql x z) (eql y z))
+
+; in: OR (EQL X Y)
+;     (EQL X Z)
+; 
+; caught WARNING:
+;   undefined variable: X
+
+;     (EQL Y Z)
+; 
+; caught WARNING:
+;   undefined variable: Y
+; 
+; caught WARNING:
+;   undefined variable: Z
+; 
+; compilation unit finished
+;   Undefined variables:
+;     X Y Z
+;   caught 3 WARNING conditions
+NIL
+CL-USER> (append '(a b) '(c d) 'e)
+(A B C D . E)
+CL-USER> (append '(a b) '(c d) '(e))
+(A B C D E)
+CL-USER> (append '(a b) '('c '(d e)))
+(A B 'C '(D E))
+CL-USER> (append '(a b) '(c (d e)))
+(A B C (D E))
+CL-USER> (defun compress (x)
+           (if (consp x)
+               (compr (car x) 1 (cdr x))
+               x))
+
+; in: DEFUN COMPRESS
+;     (COMPR (CAR X) 1 (CDR X))
+; 
+; caught STYLE-WARNING:
+;   undefined function: COMPR
+; 
+; compilation unit finished
+;   Undefined function:
+;     COMPR
+;   caught 1 STYLE-WARNING condition
+COMPRESS
+CL-USER> 
+; No value
+CL-USER> (defun compr (elt n lst)
+           (if (null lst)
+               (list (n-elts elt n))
+               (let ((next (car lst)))
+                 (if (eql next elt)
+                     (compr elt (+ n 1) (cdr lst))
+                     (cons (n-elts elt n)
+                           (compr next 1 (cdr lst)))))))
+
+; in: DEFUN COMPR
+;     (N-ELTS ELT N)
+; 
+; caught STYLE-WARNING:
+;   undefined function: N-ELTS
+; 
+; compilation unit finished
+;   Undefined function:
+;     N-ELTS
+;   caught 1 STYLE-WARNING condition
+COMPR
+CL-USER> (defun n-elts (elt n)
+           (if (> n 1)
+               (list n elt)
+               elt))
+N-ELTS
+CL-USER> (compress '(1 1 1 0 1 0 0 0 0 1))
+((3 1) 0 1 (4 0) 1)
+CL-USER> 

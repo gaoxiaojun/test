@@ -1,0 +1,6 @@
+The Python style guide, Python quick reference guide
+reading as developer "tools"
+proficient Python programmer:
+Debugger:pdb
+Logger:logging
+Profiles:profile, hotshot, cProfile

@@ -1,0 +1,544 @@
+; SLIME 2013-06-26
+CL-USER> (funcall #'+ 1 2 3)
+6
+CL-USER> ((x) (+ x 100))
+; in: (X) (+ X 100)
+;     ((X) (+ X 100))
+; 
+; caught ERROR:
+;   illegal function call
+; 
+; compilation unit finished
+;   caught 1 ERROR condition
+; Evaluation aborted on #<SB-INT:COMPILED-PROGRAM-ERROR {1004670623}>.
+CL-USER> (funcall #'((x) (+ x 100)) 2 3 4)
+; in: FUNCALL #'((X) (+ X 100))
+;     #'((X) (+ X 100))
+; 
+; caught ERROR:
+;   ((X) (+ X 100)) is not a legal function name.
+; 
+; compilation unit finished
+;   caught 1 ERROR condition
+; Evaluation aborted on #<SB-INT:COMPILED-PROGRAM-ERROR {1004BC2693}>.
+CL-USER> (apply #'(lambda (x) (+ x 100)) 2)
+; Evaluation aborted on #<TYPE-ERROR expected-type: LIST datum: 2>.
+CL-USER> ((x) (+x 100) 3)
+; in: (X) (+X 100)
+;     ((X) (+X 100) 3)
+; 
+; caught ERROR:
+;   illegal function call
+; 
+; compilation unit finished
+;   caught 1 ERROR condition
+; Evaluation aborted on #<SB-INT:COMPILED-PROGRAM-ERROR {1004FE58D3}>.
+CL-USER> (((x) (+ x 100)) 3)
+; in: ((X) (+ X 100)) 3
+;     (((X) (+ X 100)) 3)
+; 
+; caught ERROR:
+;   illegal function call
+; 
+; compilation unit finished
+;   caught 1 ERROR condition
+; Evaluation aborted on #<SB-INT:COMPILED-PROGRAM-ERROR {10051CA163}>.
+CL-USER> ((lambda (x) (+ x 100)) 1)
+101
+CL-USER> (funcall #'(lambda (x) (+ x 100)) 1)
+101
+CL-USER> (funcall #'((x) (+ x 100)) 1)
+; in: FUNCALL #'((X) (+ X 100))
+;     #'((X) (+ X 100))
+; 
+; caught ERROR:
+;   ((X) (+ X 100)) is not a legal function name.
+; 
+; compilation unit finished
+;   caught 1 ERROR condition
+; Evaluation aborted on #<SB-INT:COMPILED-PROGRAM-ERROR {10055CD883}>.
+CL-USER> (typep 27 'integer)
+T
+CL-USER> (typep 3 't)
+T
+CL-USER> (type 3 'fixnum)
+
+; in: TYPE 3
+;     (TYPE 3 'FIXNUM)
+; 
+; caught WARNING:
+;   The function TYPE is undefined, and its name is reserved by ANSI CL so that
+;   even if it were defined later, the code doing so would not be portable.
+; 
+; compilation unit finished
+;   Undefined function:
+;     TYPE
+;   caught 1 WARNING condition
+; Evaluation aborted on #<UNDEFINED-FUNCTION TYPE {10058C38F3}>.
+CL-USER> (type 3 'real)
+; Evaluation aborted on #<UNDEFINED-FUNCTION TYPE {1005A15A23}>.
+CL-USER> (defun loop(n)
+           (do ((i 0 (+ i 1)))
+               ((> i n))
+             (format t "~A~%" i)))
+                
+ (defun loop(n)
+           (do ((i 0 (+ i 1)))
+               ((> i n))
+             (format t "~A~%" i)))
+                
+; 
+; compilation unit aborted
+;   caught 2 fatal ERROR conditions
+; Evaluation aborted on #<SYMBOL-PACKAGE-LOCKED-ERROR "proclaiming ~S as a function" {10061EE053}>.
+; Evaluation aborted on #<SYMBOL-PACKAGE-LOCKED-ERROR "proclaiming ~S as a function" {10061EE053}>.
+CL-USER> 
+CL-USER> (defun loop(n)
+           (do ((i 0 (+ i 1)))
+               ((> i n) 'done)
+             (format t "~A~%" i)))
+; 
+; compilation unit aborted
+;   caught 1 fatal ERROR condition
+; Evaluation aborted on #<SYMBOL-PACKAGE-LOCKED-ERROR "proclaiming ~S as a function" {1006605233}>.
+CL-USER> (defun my_loop(n)
+           (do ((i 0 (+ i 1)))
+               ((> i n) 'done)
+             (format t "~A~%" i)))
+MY_LOOP
+CL-USER> (my_loop 3)
+0
+1
+2
+3
+DONE
+CL-USER> (my_loop 10)
+0
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+DONE
+CL-USER> (+ (- 5 1) (+ 3 7))
+14
+CL-USER> (list 1 (+ 2 3))
+(1 5)
+CL-USER> (if (listp 1) (+ 1 2) (+ 3 4))
+7
+CL-USER> (list (and (listp 3) t) (+ 1 2))
+(NIL 3)
+CL-USER> (cons 'a 'b 'c)
+; Evaluation aborted on #<SB-INT:SIMPLE-PROGRAM-ERROR "invalid number of arguments: ~S" {1006B567E3}>.
+CL-USER> (cons 'a '(b c))
+(A B C)
+CL-USER> (cons 'a (quote (b c)))
+(A B C)
+CL-USER> (cons 'a (list 'b 'c))
+(A B C)
+CL-USER> (cons 'a (cons 'b (cons 'c nil)))
+(A B C)
+CL-USER> (cons (car '(a b c)) (cdr '(a b c)))
+(A B C)
+CL-USER> (defun our-fourth(lst)
+           (car (cdr (cdr (cdr lst)))))
+OUR-FOURTH
+CL-USER> (our-fourth '(a b c d))
+D
+CL-USER> (our-fourth '(1 2 3 a 4))
+A
+CL-USER> (defun our-greater(m n)
+           (if (> m n)
+               m
+               n))
+OUR-GREATER
+CL-USER> (our-greater (2 3))
+; in: OUR-GREATER (2 3)
+;     (2 3)
+; 
+; caught ERROR:
+;   illegal function call
+; 
+; compilation unit finished
+;   caught 1 ERROR condition
+; Evaluation aborted on #<SB-INT:COMPILED-PROGRAM-ERROR {1002D04703}>.
+CL-USER> (our-greater 2 3)
+3
+CL-USER> (our-greater 0 -1)
+0
+CL-USER> (defun enigma (x)
+           (and (not (null x))
+                (or (null (car x))
+                    (enigma (cdr x)))))
+ENIGMA
+CL-USER> (enigma '(1))
+NIL
+CL-USER> (enigma '('(a b) 2))
+NIL
+CL-USER> (enigma '(2 '(a b)))
+NIL
+CL-USER> (car 3)
+; Evaluation aborted on #<TYPE-ERROR expected-type: LIST datum: 3>.
+CL-USER> (defun mystery (x y)
+           (if (null y)
+               nil
+               (if (eql (car y) x)
+                   0
+                   (let ((z (mystery x (cdr y))))
+                     (and z (+ z 1))))))
+MYSTERY
+CL-USER> (mystery 3 '(1 2 3))
+2
+CL-USER> (mystery 3 '(1 3 2))
+1
+CL-USER> (mystery 3 '(3 2 1))
+0
+CL-USER> (mystery 3 '(2 0 1 3))
+3
+CL-USER> (mystery 3 '(0 0 0 0 0 0 3 0))
+6
+CL-USER> (defun mystery (x y)
+           (if (null y)
+               nil
+               (if (eql (car y) x)
+                   0
+                   (let ((z (mystery x (cdr y))))
+                     (and z (+ z 1))))))
+STYLE-WARNING: redefining COMMON-LISP-USER::MYSTERY in DEFUN
+MYSTERY
+CL-USER> (defun mystery (x y)
+           (if (null y)
+               nil
+               (if (eql (car y) x)
+                   0
+                   (let ((z (mystery x (cdr y))))
+                     (and z (+ z 1))))))
+STYLE-WARNING: redefining COMMON-LISP-USER::MYSTERY in DEFUN
+MYSTERY
+CL-USER> (car (x (cdr '(a (b c) d))))
+
+; in: CAR (X (CDR '(A (B C) D)))
+;     (X (CDR '(A (B C) D)))
+; 
+; caught STYLE-WARNING:
+;   undefined function: X
+; 
+; compilation unit finished
+;   Undefined function:
+;     X
+;   caught 1 STYLE-WARNING condition
+; Evaluation aborted on #<UNDEFINED-FUNCTION X {100509CD13}>.
+CL-USER> (car (car (cdr '(a (b c) d))))
+B
+CL-USER> (or 13 (/ 10))
+13
+CL-USER> (list 1 nil)
+(1 NIL)
+CL-USER> (cons #'list 1 nil)
+; Evaluation aborted on #<SB-INT:SIMPLE-PROGRAM-ERROR "invalid number of arguments: ~S" {10053508F3}>.
+CL-USER> 1
+1
+CL-USER> (list 1)
+(1)
+CL-USER> (or #'list 1 nil)
+#<FUNCTION LIST>
+CL-USER> (car #'list 1 nil)
+; Evaluation aborted on #<SB-INT:SIMPLE-PROGRAM-ERROR "invalid number of arguments: ~S" {10055C46C3}>.
+CL-USER> (apply #'list 1 nil)
+(1)
+CL-USER> (list 1 nil)
+(1 NIL)
+CL-USER> (defun my_listp(lst)
+           (if (null lst)
+               nil
+               (if (not (null (car lst)))
+                   t
+                   (my_listp (cdr lst)))))
+MY_LISTP
+CL-USER> (my_listp '(a b c))
+T
+CL-USER> (not (null (card '(a b c))))
+
+; in: NOT (NULL (CARD '(A B C)))
+;     (CARD '(A B C))
+; 
+; caught STYLE-WARNING:
+;   undefined function: CARD
+; 
+; compilation unit finished
+;   Undefined function:
+;     CARD
+;   caught 1 STYLE-WARNING condition
+; Evaluation aborted on #<UNDEFINED-FUNCTION CARD {1005CC8963}>.
+CL-USER> (null (car '(a b c)))
+NIL
+CL-USER> (null (car '('(a b) c)))
+NIL
+CL-USER> (null '(a b c))
+NIL
+CL-USER> (null ())
+T
+CL-USER> (car '(a b c))
+A
+CL-USER> (null a)
+; Evaluation aborted on #<UNBOUND-VARIABLE A {1005FFC703}>.
+CL-USER> (null 'a)
+NIL
+CL-USER> (cdr 'a)
+; Evaluation aborted on #<TYPE-ERROR expected-type: LIST datum: A>.
+CL-USER> (cdr (car '(a b)))
+; Evaluation aborted on #<TYPE-ERROR expected-type: LIST datum: A>.
+CL-USER> (listp 'a)
+NIL
+CL-USER> (listp '('a))
+T
+CL-USER> (listp ())
+T
+CL-USER> (defun my_listp(lst)
+           (if (null lst)
+               nil
+               (if (listp (car lst))
+                   t
+                   (my_listp (cdr lst)))))
+STYLE-WARNING: redefining COMMON-LISP-USER::MY_LISTP in DEFUN
+MY_LISTP
+CL-USER> (my_listp '(a b c))
+NIL
+CL-USER> (my_listp '(() 2 3))
+T
+CL-USER> (defun print_dot_r(n)
+           (if (or (< n 0) (= n 0))
+               nil
+               ((print_dot_r n-1)
+                (format t "."))))
+   
+; in: DEFUN PRINT_DOT_R
+;     ((PRINT_DOT_R N-1) (FORMAT T "."))
+; 
+; caught ERROR:
+;   illegal function call
+; 
+; compilation unit finished
+;   caught 1 ERROR condition
+PRINT_DOT_R
+CL-USER> (defun print_dot_r(n)
+           (if (or (< n 0) (= n 0))
+               nil
+               ((print_dot_r n-1)
+                (format t "~A" "."))))
+; in: DEFUN PRINT_DOT_R
+;     ((PRINT_DOT_R N-1) (FORMAT T "~A" "."))
+; 
+; caught ERROR:
+;   illegal function call
+; 
+; compilation unit finished
+;   caught 1 ERROR condition
+STYLE-WARNING: redefining COMMON-LISP-USER::PRINT_DOT_R in DEFUN
+PRINT_DOT_R
+CL-USER> (print_dot_r 6)
+; Evaluation aborted on #<SB-INT:COMPILED-PROGRAM-ERROR {1006C7A7E3}>.
+CL-USER> (defun print_dot_r(n)
+           (if (or (< n 0) (= n 0))
+               nil
+               ((print_dot_r (- n 1))
+                (format t "~A" "."))))
+; in: DEFUN PRINT_DOT_R
+;     ((PRINT_DOT_R (- N 1)) (FORMAT T "~A" "."))
+; 
+; caught ERROR:
+;   illegal function call
+; 
+; compilation unit finished
+;   caught 1 ERROR condition
+STYLE-WARNING: redefining COMMON-LISP-USER::PRINT_DOT_R in DEFUN
+PRINT_DOT_R
+CL-USER> (defun print_dot(n)
+           (do ((i 0 (+ i 1)))
+               ((> i n) 'done)
+             (format t "~A" ".")))
+       
+PRINT_DOT
+CL-USER> (print_dot 4)
+.....
+DONE
+CL-USER> (defun print_dot(n)
+           (do ((i 1 (+ i 1)))
+               ((> i n) 'done)
+             (format t "~A" ".")))
+STYLE-WARNING: redefining COMMON-LISP-USER::PRINT_DOT in DEFUN
+PRINT_DOT
+CL-USER> (print_dot 4)
+....
+DONE
+CL-USER> (print_dot 10)
+..........
+DONE
+CL-USER> (print_dot -1)
+DONE
+CL-USER> (print_dot 0)
+DONE
+CL-USER> (defun print_dot_r (n)
+           (if (< n 1)
+               'done
+               (print_dot_r (- n 1))
+               (format t "~A" ".")))
+; in: DEFUN PRINT_DOT_R
+;     (IF (< N 1)
+;         'DONE
+;         (PRINT_DOT_R (- N 1))
+;         (FORMAT T "~A" "."))
+; 
+; caught ERROR:
+;   error while parsing arguments to special form IF:
+;     invalid number of elements in
+;       ((< N 1) 'DONE (PRINT_DOT_R (- N 1)) (FORMAT T "~A" "."))
+;     to satisfy lambda list
+;       (SB-C::TEST SB-C::THEN &OPTIONAL SB-C::ELSE):
+;     between 2 and 3 expected, but 4 found
+
+;     (SB-INT:NAMED-LAMBDA PRINT_DOT_R
+;         (N)
+;       (BLOCK PRINT_DOT_R
+;         (IF (< N 1)
+;             'DONE
+;             (PRINT_DOT_R (- N 1))
+;             (FORMAT T "~A" "."))))
+; 
+; caught STYLE-WARNING:
+;   The variable N is defined but never used.
+; 
+; compilation unit finished
+;   caught 1 ERROR condition
+;   caught 1 STYLE-WARNING condition
+STYLE-WARNING: redefining COMMON-LISP-USER::PRINT_DOT_R in DEFUN
+PRINT_DOT_R
+CL-USER> (- 4 1)
+3
+CL-USER> (- n 1)
+; Evaluation aborted on #<UNBOUND-VARIABLE N {1005683A13}>.
+; Evaluation aborted on #<UNBOUND-VARIABLE N {1005683A13}>.
+CL-USER> 
+CL-USER> (defparameter n 3)
+N
+CL-USER> (- n 1)
+2
+CL-USER> (defun print_dot_r (n)
+           (if (< n 1)
+               'done
+               (print_dot_r (- n 1))
+               (format t "~A" ".")))
+; in: DEFUN PRINT_DOT_R
+;     (IF (< N 1)
+;         'DONE
+;         (PRINT_DOT_R (- N 1))
+;         (FORMAT T "~A" "."))
+; 
+; caught ERROR:
+;   error while parsing arguments to special form IF:
+;     invalid number of elements in
+;       ((< N 1) 'DONE (PRINT_DOT_R (- N 1)) (FORMAT T "~A" "."))
+;     to satisfy lambda list
+;       (SB-C::TEST SB-C::THEN &OPTIONAL SB-C::ELSE):
+;     between 2 and 3 expected, but 4 found
+; 
+; compilation unit finished
+;   caught 1 ERROR condition
+STYLE-WARNING: redefining COMMON-LISP-USER::PRINT_DOT_R in DEFUN
+PRINT_DOT_R
+CL-USER> (defun print_dot_r (n)
+           (if (< n 1)
+               'done
+               (print_dot_r (- n 1)
+               (format t "~A" "."))))
+; in: DEFUN PRINT_DOT_R
+;     (PRINT_DOT_R (- N 1) (FORMAT T "~A" "."))
+; 
+; caught WARNING:
+;   The function was called with two arguments, but wants exactly one.
+; 
+; compilation unit finished
+;   caught 1 WARNING condition
+STYLE-WARNING: redefining COMMON-LISP-USER::PRINT_DOT_R in DEFUN
+PRINT_DOT_R
+CL-USER> (defun print_dot_r (n)
+           (if (< n 1)
+               'done
+               ((print_dot_r (- n 1))
+               (format t "~A" "."))))
+
+; in: DEFUN PRINT_DOT_R
+;     ((PRINT_DOT_R (- N 1)) (FORMAT T "~A" "."))
+; 
+; caught ERROR:
+;   illegal function call
+; 
+; compilation unit finished
+;   caught 1 ERROR condition
+STYLE-WARNING: redefining COMMON-LISP-USER::PRINT_DOT_R in DEFUN
+PRINT_DOT_R
+CL-USER> (defun print_dot_r (n)
+           (if (< n 1)
+               'done
+               (print_dot_r (- n 1)))               (format t "~A" "."))
+
+STYLE-WARNING: redefining COMMON-LISP-USER::PRINT_DOT_R in DEFUN
+PRINT_DOT_R
+CL-USER> (print_dot_r 6)
+.......
+NIL
+CL-USER> (defun print_dot_r (n)
+           (if (< n 1)
+               'done
+               (((print_dot_r (- n 1))
+                 (format t "~A" ".")))))
+; in: DEFUN PRINT_DOT_R
+;     (((PRINT_DOT_R (- N 1)) (FORMAT T "~A" ".")))
+; 
+; caught ERROR:
+;   illegal function call
+; 
+; compilation unit finished
+;   caught 1 ERROR condition
+STYLE-WARNING: redefining COMMON-LISP-USER::PRINT_DOT_R in DEFUN
+PRINT_DOT_R
+CL-USER> (print_dot_r 6)
+; Evaluation aborted on #<SB-INT:COMPILED-PROGRAM-ERROR {100634CF43}>.
+CL-USER> (defun summit (lst)
+           (remove nil lst)
+           (apply #'+ lst))
+SUMMIT
+CL-USER> (summit '(1 nil 2))
+; Evaluation aborted on #<SIMPLE-TYPE-ERROR expected-type: NUMBER datum: NIL>.
+CL-USER> (defun summit (lst)
+           (setf lst (remove nil lst))
+           (apply #'+ lst))
+STYLE-WARNING: redefining COMMON-LISP-USER::SUMMIT in DEFUN
+SUMMIT
+CL-USER> (summit '(1 nil 2))
+3
+CL-USER> (defun summit2 (lst)
+           (let ((x (car lst)))
+             (if (null x)
+                 (summit2 (cdr lst))
+                 (+ x (summit2 (cdr lst))))))
+SUMMIT2
+CL-USER> (null 'a)
+NIL
+CL-USER> (null ())
+T
+CL-USER> (null '(a b c))
+NIL
+CL-USER> (summit 2 '(1 nil 2))
+; Evaluation aborted on #<SB-INT:SIMPLE-PROGRAM-ERROR "invalid number of arguments: ~S" {1006D0A263}>.
+CL-USER> (defun summit2 (lst)
+           (let ((x (car lst)))
+             (if (null x)
+                 (summit2 (cdr lst))
+                 (+ x (summit2 (cdr lst))))))
+

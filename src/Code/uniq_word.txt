@@ -1,0 +1,1 @@
+set(['f:', 'words.extend(line.split())', "open('uniq_word.py')", 'as', "f.write('\\n')", 'in', 'coding:', 'for', '-*-', 'utf-8', '#-*-', '=', 'python', "'w')", '#!/usr/bin/env', '[]', 'words', 'line', 'uniq_words', 'with', 'set(words)', 'f.write(str(uniq_words))', "open('uniq_word.txt',"])

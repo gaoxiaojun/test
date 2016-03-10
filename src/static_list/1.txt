@@ -1,0 +1,4 @@
+6
+c b e g f d
+4
+a b n f

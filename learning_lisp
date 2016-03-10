@@ -1,0 +1,679 @@
+; SLIME 2013-06-26
+CL-USER> 1
+1
+CL-USER> (+ 2 3)
+5
+CL-USER> (+)
+0
+CL-USER> (+ 2)
+2
+CL-USER> (+ 2 3)
+5
+CL-USER> (+ 2 3 4)
+9
+CL-USER> (+ 2 3 4 5)
+14
+CL-USER> (* 3 4)
+12
+CL-USER> (3 4 *)
+; in: 3 4
+;     (3 4 *)
+; 
+; caught ERROR:
+;   illegal function call
+; 
+; compilation unit finished
+;   caught 1 ERROR condition
+; Evaluation aborted on #<SB-INT:COMPILED-PROGRAM-ERROR {1004B071B3}>.
+CL-USER> (/ (- 7 1) (- 4 2))
+3
+CL-USER> (defun sum(n)
+           (let ((s 0))
+             (dotimes (i n s)
+               (incf s i))))
+SUM
+CL-USER> sum(5)
+; Evaluation aborted on #<UNBOUND-VARIABLE SUM {1005470D83}>.
+CL-USER> (sum(5))
+; in: SUM (5)
+;     (5)
+; 
+; caught ERROR:
+;   illegal function call
+; 
+; compilation unit finished
+;   caught 1 ERROR condition
+; Evaluation aborted on #<SB-INT:COMPILED-PROGRAM-ERROR {10055E91B3}>.
+CL-USER> (sum 5)
+10
+CL-USER> (sum 100)
+4950
+CL-USER> (sum 101)
+5050
+CL-USER> (defun addn(n)
+           #'(lambda (x)
+               (+ x n)))
+ADDN
+CL-USER> (addn 10)
+#<CLOSURE (LAMBDA (X) :IN ADDN) {1005B367FB}>
+CL-USER> (a (addn 10))
+; in: A (ADDN 10)
+;     (A (ADDN 10))
+; 
+; caught STYLE-WARNING:
+;   undefined function: A
+; 
+; compilation unit finished
+;   Undefined function:
+;     A
+;   caught 1 STYLE-WARNING condition
+; Evaluation aborted on #<UNDEFINED-FUNCTION A {1005BEDF33}>.
+CL-USER> a = (addn 10)
+; Evaluation aborted on #<UNBOUND-VARIABLE A {1005D508A3}>.
+CL-USER> (addn 10)
+#<CLOSURE (LAMBDA (X) :IN ADDN) {1005E9AEBB}>
+CL-USER> ((addn 10) 20)
+; in: (ADDN 10) 20
+;     ((ADDN 10) 20)
+; 
+; caught ERROR:
+;   illegal function call
+; 
+; compilation unit finished
+;   caught 1 ERROR condition
+; Evaluation aborted on #<SB-INT:COMPILED-PROGRAM-ERROR {1005EE0373}>.
+CL-USER> (/ 1 0)
+; Evaluation aborted on #<DIVISION-BY-ZERO {10060FD073}>.
+CL-USER> (quote (+ 1 3))
+(+ 1 3)
+CL-USER> '(quote (+ 1 3))
+'(+ 1 3)
+CL-USER> 'Artichoke
+ARTICHOKE
+CL-USER> '(my 3 "Sons")
+(MY 3 "Sons")
+CL-USER> '(the list (a b c) has 3 elements)
+(THE LIST (A B C) HAS 3 ELEMENTS)
+CL-USER> (list my (+ 1 2) "Sons")
+; Evaluation aborted on #<UNBOUND-VARIABLE MY {10068B3153}>.
+CL-USER> (list 'my (+ 1 2) "Sons")
+(MY 3 "Sons")
+CL-USER> (list '(+ 1 2) (+ 1 2))
+((+ 1 2) 3)
+CL-USER> ()
+NIL
+CL-USER> nil
+NIL
+CL-USER> 0
+0
+CL-USER> (= 0 nil)
+; Evaluation aborted on #<SIMPLE-TYPE-ERROR expected-type: NUMBER datum: NIL>.
+CL-USER> 'nil
+NIL
+CL-USER> (quote nil)
+NIL
+CL-USER> quote nil
+; Evaluation aborted on #<UNBOUND-VARIABLE QUOTE {1009AC8DE3}>.
+CL-USER> (cons 'a '(b c d))
+(A B C D)
+CL-USER> (cons 'a 'b)
+(A . B)
+CL-USER> (cons 'a (cons 'b nil))
+(A B)
+CL-USER> (list 'a 'b)
+(A B)
+CL-USER> (car '(a b c))
+A
+CL-USER> (cdr '(a b c))
+(B C)
+CL-USER> (cdr (cdr '(a b c)'))
+; Evaluation aborted on #<SB-INT:SIMPLE-READER-ERROR "unmatched close parenthesis" {10046FA433}>.
+CL-USER> (cdr (cdr '(a b c)))
+(C)
+CL-USER> (car (cdr (cdr '(a b c))))
+C
+CL-USER> (third '(a b c d))
+C
+CL-USER> (first '(a b c d))
+A
+CL-USER> (fourth '(a b c d))
+D
+CL-USER> (fifth '(a b c d e))
+E
+CL-USER> (sixth '(a b c d e f))
+F
+CL-USER> (ninth '(a b c d e f g h i))
+I
+CL-USER> (listp '(a b c))
+T
+CL-USER> (listp 3)
+NIL
+CL-USER> (null nil)
+T
+CL-USER> (null 3)
+NIL
+CL-USER> (null '(nil))
+NIL
+CL-USER> (null nil)
+T
+CL-USER> (not nil)
+T
+CL-USER> (not 3)
+NIL
+CL-USER> (not 0)
+NIL
+CL-USER> (if (listp '(a b c))
+             (+ 1 2)
+             (+ 5 6))
+3
+CL-USER> (if (listp 27)
+             (+ 1 2)
+             (+ 5 6))
+11
+CL-USER> (if (not 3)
+             (- 1 2))
+NIL
+CL-USER> (if (not 3)
+             (- 1 2)
+             (* 3 4))
+12
+CL-USER> (if 0 (sum 500) (sum 3))
+124750
+CL-USER> (if nil (sum 500) (sum 3))
+3
+CL-USER> (and t (+ 1 2))
+3
+CL-USER> (and (listp 3) (+ 3 4))
+NIL
+CL-USER> (or nil nil nil (sum 10))
+45
+CL-USER> (and t t t (not 0))
+NIL
+CL-USER> (defun our-third (x)
+           (car (cdr (cdr x))))
+OUR-THIRD
+CL-USER> (our-third '(a b c d))
+C
+CL-USER> (third '(a b c d))
+C
+CL-USER> (> (+ 1 4) 3)
+T
+CL-USER> (= (+ 1 4) 3)
+NIL
+CL-USER> (= (our-third '(a b c d)) (third '(a b c d)))
+; Evaluation aborted on #<TYPE-ERROR expected-type: NUMBER datum: C>.
+CL-USER> (= (our-third '(a b 3 d)) (third '(a b 3 d)))
+T
+CL-USER> (defun sum-greater (x y z)
+           (> (+ x y) z))
+SUM-GREATER
+CL-USER> (sum-greater 3 4 5)
+T
+CL-USER> (sum-greater 1 2 3)
+NIL
+CL-USER> (defun our-member (obj lst)
+           (if (null lst)
+               nil
+               (if (eql (car lst) obj)
+                   lst
+                   (our-member obj (cdr lst)))))
+OUR-MEMBER
+CL-USER> (our-member 'a '(a b c d))
+(A B C D)
+CL-USER> (our-member 'c '(a b c d))
+(C D)
+CL-USER> (eql (our-third '(a b c)) (third '(a b c)))
+T
+CL-USER> (defun prime (n lst)
+           (if (null lst)
+               (cons lst (cons n nil))
+               (if (= (% n (car lst)) 0)
+                   nil
+                   (prime n (cdr lst)))))
+
+; in: DEFUN PRIME
+;     (% N (CAR LST))
+; 
+; caught STYLE-WARNING:
+;   undefined function: %
+; 
+; compilation unit finished
+;   Undefined function:
+;     %
+;   caught 1 STYLE-WARNING condition
+PRIME
+CL-USER> (defun prime (n lst)
+           (if (null lst)
+               (cons lst (cons n nil))
+               (if (= (mod n (car lst)) 0)
+                   nil
+                   (prime n (cdr lst)))))
+
+STYLE-WARNING: redefining COMMON-LISP-USER::PRIME in DEFUN
+PRIME
+CL-USER> (defun prime_ (n lst)
+           (if (null lst)
+               (cons lst (cons n nil))
+               (if (= (mod n (car lst)) 0)
+                   nil
+                   (prime n (cdr lst)))))
+
+PRIME_
+CL-USER> (prime_ 29 (cons 2 nil))
+(NIL 29)
+CL-USER> (cons 2 nil)
+(2)
+CL-USER> (prime_ 29 (2))
+; in: PRIME_ 29
+;     (2)
+; 
+; caught ERROR:
+;   illegal function call
+; 
+; compilation unit finished
+;   caught 1 ERROR condition
+; Evaluation aborted on #<SB-INT:COMPILED-PROGRAM-ERROR {10048A8FC3}>.
+CL-USER> (prime_ 29 '(2))
+(NIL 29)
+CL-USER> (cons '(2) (cons 29 nil))
+((2) 29)
+CL-USER> (cons 29 '(2))
+(29 2)
+CL-USER> (defun prime_ (n lst wlst)
+           (if (null lst)
+               (cons n wlst)
+               (if (= (mod n (car lst)) 0)
+                   nil
+                   (prime n (cdr lst) wlst))))
+
+; in: DEFUN PRIME_
+;     (PRIME N (CDR LST) WLST)
+; 
+; caught STYLE-WARNING:
+;   The function was called with three arguments, but wants exactly two.
+; 
+; compilation unit finished
+;   caught 1 STYLE-WARNING condition
+STYLE-WARNING: redefining COMMON-LISP-USER::PRIME_ in DEFUN
+PRIME_
+CL-USER> (defun primex (n lst wlst)
+           (if (null lst)
+               (cons n wlst)
+               (if (= (mod n (car lst)) 0)
+                   nil
+                   (primex n (cdr lst) wlst))))
+
+PRIMEX
+CL-USER> (primex 29 '(2) '(2))
+(29 2)
+CL-USER> (prime 10 '(2) '(2))
+; Evaluation aborted on #<SB-INT:SIMPLE-PROGRAM-ERROR "invalid number of arguments: ~S" {1005327D13}>.
+CL-USER> (primex 10 '(2) '(2))
+NIL
+CL-USER> (format t "~A plus ~A equals ~A.~%" 2 3 (+ 2 3))
+2 plus 3 equals 5.
+NIL
+CL-USER> (defun askem (string)
+           (format t "~A" string)
+           (read))
+ASKEM
+CL-USER> (askem "How old are you ? ")
+How old are you ? 29
+
+29
+CL-USER> (let ((x 1) (y 2))
+           (+ x y))
+3
+CL-USER> (defun ask-number ()
+           (format t "Please enter a number. ")
+           (let ((val (read)))
+             (if (numberp val)
+                 val
+                 (ask-number))))
+ASK-NUMBER
+CL-USER> (ask-number)
+Please enter a number. 3
+
+3
+CL-USER> (ask-number)
+Please enter a number. a
+Please enter a number. b
+Please enter a number. c
+Please enter a number. d
+Please enter a number. 4
+
+4
+CL-USER> (defparameter *glob* 99)
+*GLOB*
+CL-USER> (sum *glob*)
+4851
+CL-USER> (ask-number)
+Please enter a number. *glob*
+Please enter a number. 99
+
+99
+CL-USER> (defconstant limit (+ *glob* 1))
+LIMIT
+CL-USER> (sum limit)
+4950
+CL-USER> help
+; Evaluation aborted on #<UNBOUND-VARIABLE HELP {100641D153}>.
+CL-USER> (help)
+
+; in: HELP
+;     (HELP)
+; 
+; caught STYLE-WARNING:
+;   undefined function: HELP
+; 
+; compilation unit finished
+;   Undefined function:
+;     HELP
+;   caught 1 STYLE-WARNING condition
+; Evaluation aborted on #<UNDEFINED-FUNCTION HELP {100658DF13}>.
+CL-USER> (boundp '*glob*)
+T
+CL-USER> (boundp 'limit)
+T
+CL-USER> (setf *glob* 98)
+98
+CL-USER> (sum *glob*)
+4753
+CL-USER> (let ((n 10))
+           (format t "before: ~A.~%" n)
+           (setf n 2)
+           n)
+before: 10.
+2
+CL-USER> (let ((n 10))
+           (format t "before: ~A.~%" n)
+           (setf n 2)
+           (format t "after: ~A.~%" n))
+before: 10.
+after: 2.
+NIL
+CL-USER> (setf x (list 'a 'b 'c))
+
+; in: SETF X
+;     (SETF X (LIST 'A 'B 'C))
+; ==>
+;   (SETQ X (LIST 'A 'B 'C))
+; 
+; caught WARNING:
+;   undefined variable: X
+; 
+; compilation unit finished
+;   Undefined variable:
+;     X
+;   caught 1 WARNING condition
+(A B C)
+CL-USER> (third x)
+C
+CL-USER> (our-third x)
+C
+CL-USER> (defun print_reverse(lst)
+           (if (null lst)
+               nil
+               (print_reverse (cdr lst))
+               (format t "~A~%" (car lst))))
+; in: DEFUN PRINT_REVERSE
+;     (IF (NULL LST)
+;         NIL
+;         (PRINT_REVERSE (CDR LST))
+;         (FORMAT T "~A~%" (CAR LST)))
+; 
+; caught ERROR:
+;   error while parsing arguments to special form IF:
+;     invalid number of elements in
+;       ((NULL LST) NIL (PRINT_REVERSE (CDR LST)) (FORMAT T "~A~%" (CAR LST)))
+;     to satisfy lambda list
+;       (SB-C::TEST SB-C::THEN &OPTIONAL SB-C::ELSE):
+;     between 2 and 3 expected, but 4 found
+
+;     (SB-INT:NAMED-LAMBDA PRINT_REVERSE
+;         (LST)
+;       (BLOCK PRINT_REVERSE
+;         (IF (NULL LST)
+;             NIL
+;             (PRINT_REVERSE (CDR LST))
+;             (FORMAT T "~A~%" (CAR LST)))))
+; 
+; caught STYLE-WARNING:
+;   The variable LST is defined but never used.
+; 
+; compilation unit finished
+;   caught 1 ERROR condition
+;   caught 1 STYLE-WARNING condition
+PRINT_REVERSE
+CL-USER> (defun print_reverse(lst)
+           (if (null lst)
+               nil
+               (print_reverse (cdr lst)))
+               (format t "~A~%" (car lst)))
+STYLE-WARNING: redefining COMMON-LISP-USER::PRINT_REVERSE in DEFUN
+PRINT_REVERSE
+CL-USER> (print_reverse x)
+NIL
+C
+B
+A
+NIL
+CL-USER> (boundp x)
+; Evaluation aborted on #<TYPE-ERROR expected-type: SYMBOL datum: (A B C)>.
+CL-USER> (boundp 'x)
+T
+CL-USER> (setf (car x) 'n)
+N
+CL-USER> x
+(N B C)
+CL-USER> (setf a b c d e f)
+
+; in: SETF A
+;     (SETF A B)
+; ==>
+;   (SETQ A B)
+; 
+; caught WARNING:
+;   undefined variable: A
+
+; --> SETQ 
+; ==>
+;   (SET 'A B)
+; 
+; caught WARNING:
+;   undefined variable: B
+; 
+; compilation unit finished
+;   Undefined variables:
+;     A B
+;   caught 2 WARNING conditions
+; Evaluation aborted on #<UNBOUND-VARIABLE B {100A329413}>.
+CL-USER> (setf y '(c a r a t))
+
+; in: SETF Y
+;     (SETF Y '(C A R A T))
+; ==>
+;   (SETQ Y '(C A R A T))
+; 
+; caught WARNING:
+;   undefined variable: Y
+; 
+; compilation unit finished
+;   Undefined variable:
+;     Y
+;   caught 1 WARNING condition
+(C A R A T)
+CL-USER> (remove 'a y)
+(C R T)
+CL-USER> y
+(C A R A T)
+CL-USER> (print_reverse y)
+NIL
+T
+A
+R
+A
+C
+NIL
+CL-USER> (setf x (remove 'a y))
+
+; in: SETF X
+;     (SETF X (REMOVE 'A Y))
+; ==>
+;   (SETQ X (REMOVE 'A Y))
+; 
+; caught WARNING:
+;   undefined variable: X
+
+;     (REMOVE 'A Y)
+; 
+; caught WARNING:
+;   undefined variable: Y
+; 
+; compilation unit finished
+;   Undefined variables:
+;     X Y
+;   caught 2 WARNING conditions
+(C R T)
+CL-USER> x
+(C R T)
+CL-USER> (defun show-squares (start end)
+           (do ((i start (+ i 1)))
+               ((> i end) 'done)
+             (format t "~A ~A~%" i (* i i))))
+SHOW-SQUARES
+CL-USER> (show-squares 1 10)
+1 1
+2 4
+3 9
+4 16
+5 25
+6 36
+7 49
+8 64
+9 81
+10 100
+DONE
+CL-USER> (defun show-squares_r (i end)
+           (if (> i end)
+               'done
+               (progn
+                 (format t "~A ~A~%" i (* i i))
+                 (show-squares_r (+ i 1) end))))
+SHOW-SQUARES_R
+CL-USER> (show_square_r 1 10)
+
+; in: SHOW_SQUARE_R 1
+;     (SHOW_SQUARE_R 1 10)
+; 
+; caught STYLE-WARNING:
+;   undefined function: SHOW_SQUARE_R
+; 
+; compilation unit finished
+;   Undefined function:
+;     SHOW_SQUARE_R
+;   caught 1 STYLE-WARNING condition
+; Evaluation aborted on #<UNDEFINED-FUNCTION SHOW_SQUARE_R {100508EA23}>.
+CL-USER> (defun show-squares_r (i end)
+           (if (> i end)
+               'done
+               (progn
+                 (format t "~A ~A~%" i (* i i))
+                 (show_squares_r (+ i 1) end))))
+
+
+; in: DEFUN SHOW-SQUARES_R
+;     (SHOW_SQUARES_R (+ I 1) END)
+; 
+; caught STYLE-WARNING:
+;   undefined function: SHOW_SQUARES_R
+; 
+; compilation unit finished
+;   Undefined function:
+;     SHOW_SQUARES_R
+;   caught 1 STYLE-WARNING condition
+STYLE-WARNING: redefining COMMON-LISP-USER::SHOW-SQUARES_R in DEFUN
+SHOW-SQUARES_R
+CL-USER> (defun show_squares_r (i end)
+           (if (> i end)
+               'done
+               (progn
+                 (format t "~A ~A~%" i (* i i))
+                 (show_squares_r (+ i 1) end))))
+
+SHOW_SQUARES_R
+CL-USER> (show_squares_r 1 10)
+1 1
+2 4
+3 9
+4 16
+5 25
+6 36
+7 49
+8 64
+9 81
+10 100
+DONE
+CL-USER> (defun our-length (lst)
+           (let ((len 0))
+             (dolist (obj lst)
+               (setf len (+ len 1)))
+               len))
+; in: DEFUN OUR-LENGTH
+;     (DOLIST (OBJ LST) (SETF LEN (+ LEN 1)))
+; --> BLOCK LET TAGBODY UNLESS IF PROGN 
+; ==>
+;   (LET ((OBJ (CAR #:N-LIST0)))
+;     (SETQ #:N-LIST0 (CDR #:N-LIST0))
+;     (TAGBODY (SETF LEN (+ LEN 1))))
+; 
+; caught STYLE-WARNING:
+;   The variable OBJ is defined but never used.
+; 
+; compilation unit finished
+;   caught 1 STYLE-WARNING condition
+OUR-LENGTH
+CL-USER> (our-length y)
+5
+CL-USER> (our-length x)
+3
+CL-USER> (our-length (list 'a 'b 'c 0 1 2))
+6
+CL-USER> (our-length (list x 'a'))
+; Evaluation aborted on #<SB-INT:SIMPLE-READER-ERROR "unmatched close parenthesis" {10058CC403}>.
+CL-USER> (our-length (list x 'a))
+2
+CL-USER> (defun our-length-r (lst)
+           (if (null lst)
+               0
+               (+ (our-length-r (cdr lst)) 1)))
+OUR-LENGTH-R
+CL-USER> (our-length-r y)
+5
+CL-USER> (our-length-r x)
+3
+CL-USER> (function +)
+#<FUNCTION +>
+CL-USER> (function our-length-r)
+#<FUNCTION OUR-LENGTH-R>
+CL-USER> #'+
+#<FUNCTION +>
+CL-USER> #'our-length
+#<FUNCTION OUR-LENGTH>
+CL-USER> (apply #'+ '(1 2 3))
+6
+CL-USER> (apply #'addn 10)
+; Evaluation aborted on #<TYPE-ERROR expected-type: LIST datum: 10>.
+CL-USER> (eql 0 nil)
+NIL
+CL-USER> (eql 0 0)
+T
+CL-USER> (our-length-r (list nil))
+1
+CL-USER> (list nil)
+(NIL)
+CL-USER> (our-length-r ())
+0
+CL-USER> (our-length ())
+0
+CL-USER> 
