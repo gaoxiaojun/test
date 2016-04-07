@@ -510,3 +510,170 @@ the inner query against values selected by the outer query
     |          2 | Facebook | user2-msnid  | 
     |          2 | LinkedIn | user2-lnkdid | 
     +------------+----------+--------------+
+
+# 3.9. Selecting Rows from the Beginning, End, or Middle of Query Results
+
+Problem
+
+You want only certain rows from a result set, such as the first one, the last five, or rows
+21 through 40.
+
+Solution
+
+Use a LIMIT clause, perhaps in conjunction with an ORDER BY clause.
+
+Discussion
+
+MySQL supports a LIMIT clause that tells the server to return only part of a result set.
+LIMIT is a MySQL-specific extension to SQL that is extremely valuable when your result
+set contains more rows than you want to see at a time. It enables you to retrieve an
+arbitrary section of a result set. Typical LIMIT uses include the following kinds of prob‐
+lems:
+
+• Answering questions about first or last, largest or smallest, newest or oldest, least
+or most expensive, and so forth.
+• Splitting a result set into sections so that you can process it one piece at a time. This
+technique is common in web applications for displaying a large search result across
+several pages. Showing the result in sections enables display of smaller, easier-to-
+understand pages.
+
+    mysql> SELECT * FROM profile LIMIT 1;
+    +----+-------+------------+-------+----------------------+------+
+    | id | name  | birth      | color | foods                | cats |
+    +----+-------+------------+-------+----------------------+------+
+    |  1 | Sybil | 1970-04-13 | black | lutefisk,fadge,pizza |    0 |
+    +----+-------+------------+-------+----------------------+------+
+    mysql> SELECT * FROM profile LIMIT 3;
+    +----+-------+------------+-------+-----------------------+------+
+    | id | name  | birth      | color | foods                 | cats |
+    +----+-------+------------+-------+-----------------------+------+
+    |  1 | Sybil | 1970-04-13 | black | lutefisk,fadge,pizza  |    0 |
+    |  2 | Nancy | 1969-09-30 | white | burrito,curry,eggroll |    3 |
+    |  3 | Ralph | 1973-11-02 | red   | eggroll,pizza         |    4 |
+    +----+-------+------------+-------+-----------------------+------+
+
+LIMIT n means “return at most n rows.” If you specify LIMIT 10 , and the result set has
+only four rows, the server returns four rows.
+
+    mysql> SELECT * FROM profile ORDER BY birth LIMIT 1;
+    +----+--------+------------+-------+----------------+------+
+    | id | name   | birth      | color | foods          | cats |
+    +----+--------+------------+-------+----------------+------+
+    |  7 | Joanna | 1952-08-20 | green | lutefisk,fadge |    0 |
+    +----+--------+------------+-------+----------------+------+
+    mysql> SELECT * FROM profile ORDER BY birth DESC LIMIT 1;
+    +----+-------+------------+-------+---------------+------+
+    | id | name  | birth      | color | foods         | cats |
+    +----+-------+------------+-------+---------------+------+
+    |  3 | Ralph | 1973-11-02 | red   | eggroll,pizza |    4 |
+    +----+-------+------------+-------+---------------+------+
+    mysql> SELECT name, DATE_FORMAT(birth,'%m-%d') AS birthday
+        -> FROM profile ORDER BY birthday LIMIT 1;
+    +-------+----------+
+    | name  | birthday |
+    +-------+----------+
+    | Henry | 02-14    |
+    +-------+----------+
+    mysql> SELECT * FROM profile ORDER BY birth LIMIT 2,1;
+    +----+---------+------------+-------+---------------+------+
+    | id | name    | birth      | color | foods         | cats |
+    +----+---------+------------+-------+---------------+------+
+    |  4 | Lothair | 1963-07-04 | blue  | burrito,curry |    5 |
+    +----+---------+------------+-------+---------------+------+
+    mysql> SELECT * FROM profile ORDER BY birth DESC LIMIT 2,1;
+    +----+-------+------------+-------+-----------------------+------+
+    | id | name  | birth      | color | foods                 | cats |
+    +----+-------+------------+-------+-----------------------+------+
+    |  2 | Nancy | 1969-09-30 | white | burrito,curry,eggroll |    3 |
+    +----+-------+------------+-------+-----------------------+------+
+
+    SELECT * FROM profile ORDER BY name LIMIT 0, 3;
+    SELECT * FROM profile ORDER BY name LIMIT 3, 3;
+    SELECT * FROM profile ORDER BY name LIMIT 6, 3;
+
+    SELECT SQL_CALC_FOUND_ROWS * FROM profile ORDER BY name LIMIT 4;
+    SELECT FOUND_ROWS();
+
+The keyword SQL_CALC_FOUND_ROWS in the first statement tells MySQL to calculate the
+size of the entire result set even though the statement requests that only part of it be
+returned. The row count is available by calling FOUND_ROWS() . If that function returns
+a value greater than three, there are other rows yet to be retrieved.
+
+LIMIT is useful in combination with RAND() to make random selections from a set of
+items. See Recipe 15.8.
+You can use LIMIT to restrict the effect of a DELETE or UPDATE statement to a subset of
+the rows that would otherwise be deleted or updated, respectively. For more information
+about using LIMIT for duplicate row removal, see Recipe 16.4.
+
+# 3.10. What to Do When LIMIT Requires the “Wrong” Sort Order
+
+Problem
+
+LIMIT usually works best in conjunction with an ORDER BY clause that sorts rows. But
+sometimes that sort order differs from what you want for the final result.
+
+Solution
+
+Use LIMIT in a subquery to retrieve the desired rows, then use the outer query to sort
+them.
+
+Discussion
+
+If you want the last four rows of a result set, you can obtain them easily by sorting the
+set in reverse order and using LIMIT 4 .What if you want the output rows to appear in ascending order instead?
+Use the SELECT as a subquery of an outer statement that re-sorts the rows in the desired
+final order:
+
+    mysql> SELECT * FROM
+        -> (SELECT name, birth FROM profile ORDER BY birth DESC LIMIT 4) AS t
+        -> ORDER BY birth;
+    +-------+------------+
+    | name  | birth      |
+    +-------+------------+
+    | Aaron | 1968-09-17 |
+    | Nancy | 1969-09-30 |
+    | Sybil | 1970-04-13 |
+    | Ralph | 1973-11-02 |
+    +-------+------------+
+
+AS t is used here because any table referred to in the FROM clause must have a name, even
+a “derived” table produced from a subquery.
+
+# 3.11. Calculating LIMIT Values from Expressions
+
+Problem
+
+You want to use expressions to specify the arguments for LIMIT.
+
+Solution
+
+Sadly, you cannot. LIMIT arguments must be literal integers—unless you issue the state‐
+ment in a context that permits the statement string to be constructed dynamically. In
+that case, you can evaluate the expressions yourself and insert the resulting values into
+the statement string.
+
+Discussion
+
+Arguments to LIMIT must be literal integers, not expressions. Statements such as the
+following are illegal:
+
+    SELECT * FROM profile LIMIT 5+5;
+    SELECT * FROM profile LIMIT @skip_count, @show_count;
+
+The same “no expressions permitted” principle applies if you use an expression to cal‐
+culate a LIMIT value in a program that constructs a statement string. You must evaluate
+the expression first, and then place the resulting value in the statement. For example, if
+you produce a statement string in Perl or PHP as follows, an error will result when you
+attempt to execute the statement:
+
+    $str = "SELECT * FROM profile LIMIT $x + $y";
+
+To avoid the problem, evaluate the expression first:
+
+    $z = $x + $y;
+    $str = "SELECT * FROM profile LIMIT $z";
+
+Or do this (don’t omit the parentheses or the expression won’t evaluate properly):
+
+    $str = "SELECT * FROM profile LIMIT " . ($x + $y);
+
