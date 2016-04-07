@@ -403,3 +403,110 @@ From a readability standpoint, IF() often is easier to understand than IFNULL().
 a computational perspective, IFNULL() is more efficient because expr1 need not be
 evaluated twice, as happens with IF().
 
+# 3.6. Writing Comparisons Involving NULL in Programs
+
+Problem
+
+You’re writing a program that looks for rows containing a specific value, but it fails when
+the value is NULL.
+
+Solution
+
+Choose the proper comparison operator according to whether the comparison value is
+or is not NULL.
+
+Discussion
+
+A comparison of score = NULL is never true, so that statement returns no rows. To take
+into account the possibility that $score could be undef, construct the statement using
+the appropriate comparison operator like this:
+
+    $operator = defined ($score) ? "=" : "IS";
+    $sth = $dbh->prepare ("SELECT * FROM expt WHERE score $operator ?");
+    $sth->execute ($score);
+
+For inequality tests, set $operator like this instead:
+
+    $operator = defined ($score) ? "<>" : "IS NOT";
+
+# 3.7. Using Views to Simplify Table Access
+
+Problem
+
+You want to refer to values calculated from expressions without writing the expressions
+each time you retrieve them.
+
+Solution
+
+Use a view defined such that its columns perform the desired calculations.
+
+Discussion
+
+To make the statement results easier to access, use a view, which is a virtual table
+that contains no data. Instead, it’s defined as the SELECT statement that retrieves the data
+of interest. The following view, mail_view, is equivalent to the SELECT statement just
+shown:
+
+    mysql> CREATE VIEW mail_view AS
+        -> SELECT
+        -> DATE_FORMAT(t,'%M %e, %Y') AS date_sent,
+        -> CONCAT(srcuser,'@',srchost) AS sender,
+        -> CONCAT(dstuser,'@',dsthost) AS recipient,
+        -> size FROM mail;
+
+To access the view contents, refer to it like any other table. You can select some or all of
+its columns, add a WHERE clause to restrict which rows to retrieve, use ORDER BY to sort
+the rows, and so forth. For example:
+
+    mysql> SELECT date_sent, sender, size FROM mail_view
+        -> WHERE size > 100000 ORDER BY size;
+    +--------------+---------------+---------+
+    | date_sent    | sender        | size    |
+    +--------------+---------------+---------+
+    | May 12, 2014 | tricia@mars   |  194925 | 
+    | May 15, 2014 | gene@mars     |  998532 | 
+    | May 14, 2014 | tricia@saturn | 2394482 | 
+    +--------------+---------------+---------+
+
+Stored programs provide another way to encapsulate calculations
+
+# 3.8. Selecting Data from Multiple Tables
+
+Problem
+
+The answer to a question requires data from more than one table.
+
+Solution
+
+Use a join or a subquery.
+
+Discussion
+
+The queries shown so far select data from a single table, but sometimes you must retrieve
+information from multiple tables. Two types of statements that accomplish this are joins
+and subqueries. A join matches rows in one table with rows in another and enables you
+to retrieve output rows that contain columns from either or both tables. A subquery is
+one query nested within another, to perform a comparison between values selected by
+the inner query against values selected by the outer query
+
+    mysql> SELECT id, name, service, contact_name
+        -> FROM profile INNER JOIN profile_contact ON id = profile_id;
+    +----+---------+----------+--------------+
+    | id | name    | service  | contact_name |
+    +----+---------+----------+--------------+
+    |  1 | Sybil   | Twitter  | user1-twtrid | 
+    |  1 | Sybil   | Facebook | user1-fbid   | 
+    |  2 | Nancy   | Twitter  | user2-fbrid  | 
+    |  2 | Nancy   | Facebook | user2-msnid  | 
+    |  2 | Nancy   | LinkedIn | user2-lnkdid | 
+    |  4 | Lothair | LinkedIn | user4-lnkdid | 
+    +----+---------+----------+--------------+
+    mysql> SELECT * FROM profile_contact
+        -> WHERE profile_id = (SELECT id FROM profile WHERE name = 'Nancy');
+    +------------+----------+--------------+
+    | profile_id | service  | contact_name |
+    +------------+----------+--------------+
+    |          2 | Twitter  | user2-fbrid  | 
+    |          2 | Facebook | user2-msnid  | 
+    |          2 | LinkedIn | user2-lnkdid | 
+    +------------+----------+--------------+
