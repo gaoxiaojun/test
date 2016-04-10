@@ -160,12 +160,7 @@ LIKE操作符执行一个模式匹配，%作为一个通配符匹配任意 字�
 
 **讨论**
 
-When you select rows, the MySQL server is free to return them in any order unless you
-instruct it otherwise by saying how to sort the result. There are lots of ways to use sorting
-techniques, as Chapter 7 explores in detail. Briefly, to sort a result set, add an ORDER BY
-clause that names the column or columns to use for sorting. This statement names
-multiple columns in the ORDER BY clause to sort rows by host and by user within each
-host:
+当你查询行时，MySQL服务器可以自由地以任意顺序返回它们，除非你通知怎么排序它们。有很多中排序的方式。简单地使用ORDER BY语句排序：
 
     mysql> SELECT * FROM mail WHERE dstuser = 'tricia'
         -> ORDER BY srchost, srcuser;
@@ -179,8 +174,7 @@ host:
     | 2014-05-12 18:59:18 | barb    | saturn  | tricia  | venus   |    271 | 
     +---------------------+---------+---------+---------+---------+--------+
 
-To sort a column in reverse (descending) order, add the keyword DESC after its name in
-the ORDER BY clause:
+为了以相反的顺序排序列，在ORDER BY语句后面添加DESC关键字：
 
     mysql> SELECT * FROM mail WHERE size > 50000 ORDER BY size DESC;
     +---------------------+---------+---------+---------+---------+---------+
@@ -193,17 +187,19 @@ the ORDER BY clause:
     | 2014-05-11 10:15:08 | barb    | saturn  | tricia  | mars    |   58274 | 
     +---------------------+---------+---------+---------+---------+---------+
 
-# 3.4. Removing Duplicate Rows
+# 3.4. 去除重复行
 
-Problem
-Output from a query contains duplicate rows. You want to eliminate them.
-Solution
-Use DISTINCT.
+**问题**
 
-Discussion
+查询结果包含重复行，你想要消除它们。
 
-Some queries produce results containing duplicate rows. For example, to see who sent
-mail, query the mail table like this:
+**解决方法**
+
+使用DISTINCT。
+
+**讨论**
+
+某些查询产生包含重复行的结果：
 
     mysql> SELECT srcuser FROM mail;
     +---------+
@@ -227,8 +223,7 @@ mail, query the mail table like this:
     | gene    | 
     +---------+
 
-That result is heavily redundant. To remove the duplicate rows and produce a set of
-unique values, add DISTINCT to the query:
+为了删除重复行，产生唯一值的集合，添加DISTINCT到查询：
 
     mysql> SELECT DISTINCT srcuser FROM mail;
     +---------+
@@ -239,9 +234,6 @@ unique values, add DISTINCT to the query:
     | phil    | 
     | gene    | 
     +---------+
-
-To count the number of unique values in a column, use COUNT(DISTINCT):
-
     mysql> SELECT COUNT(DISTINCT srcuser) FROM mail;
     +-------------------------+
     | COUNT(DISTINCT srcuser) |
@@ -249,8 +241,7 @@ To count the number of unique values in a column, use COUNT(DISTINCT):
     |                       4 | 
     +-------------------------+
 
-DISTINCT works with multiple-column output, too. The following query shows which
-dates are represented in the mail table:
+DISTINCT也可以处理多列：
 
     mysql> SELECT DISTINCT YEAR(t), MONTH(t), DAYOFMONTH(t) FROM mail;
     +---------+----------+---------------+
@@ -264,14 +255,17 @@ dates are represented in the mail table:
     |    2014 |        5 |            19 | 
     +---------+----------+---------------+
 
-# 3.5. Working with NULL Values
+# 3.5. 处理NULL值
 
-Problem
-You’re trying to to compare column values to NULL, but it isn’t working.
-Solution
-Use the proper comparison operators: IS NULL, IS NOT NULL, or <=>.
+**问题**
 
-Discussion
+你尝试将列的值与NULL比较，但是不起作用。
+
+**解决方法**
+
+使用合适的比较操作符：IS NULL，IS NOT NULL或<=>。
+
+**讨论**
 
 Conditions that involve NULL are special because NULL means “unknown value.” Con‐
 sequently, comparisons such as value = NULL or value <> NULL always produce a result
