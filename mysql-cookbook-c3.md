@@ -3,33 +3,23 @@ date: 2016-04-07 12:14:29
 tags: [MySQL]
 ---
 
-# 2.0. 介绍
+# 3.0. 介绍
 
-## MySQL Client API Architecture
+本章专注使用SELECT语句从你的数据库获取信息。
 
-Each MySQL programming interface covered in this book uses a two-level architecture:
+# 3.1. 指定SELECT哪行哪列
 
-* The upper level provides database-independent methods that implement database
-access in a portable way that’s the same whether you use MySQL, PostgreSQL, Ora‐
-cle, or whatever.
-* The lower level consists of a set of drivers, each of which implements the details for
-a single database system.
+**问题**
 
-# 3.1. Specifying Which Columns and Rows to Select
+你想要从一张表中展示特定行和列。
 
-Problem
+**解决方法**
 
-You want to display specific columns and rows from a table.
+为了指示展示哪一列，在输出列表中指定它。为了指示展示哪一行，使用WHERE语句指定满足条件的行。
 
-Solution
+**讨论**
 
-To indicate which columns to display, name them in the output column list. To indicate
-which rows to display, use a WHERE clause that specifies conditions that rows must satisfy.
-
-Discussion
-
-The simplest way to display columns from a table is to use SELECT * FROM tbl_name. The
-* specifier is a shortcut that means “all columns”:
+从一个表中显示列最简单的方式是使用SELECT * FROM tbl_name。*限定符意思是“所有列”：
 
     mysql> SELECT * FROM mail; 
     +---------------------+---------+---------+---------+---------+---------+
@@ -40,10 +30,7 @@ The simplest way to display columns from a table is to use SELECT * FROM tbl_nam
     | 2014-05-12 15:02:49 | phil    | mars    | phil    | saturn  |    1048 | 
     | 2014-05-12 18:59:18 | barb    | saturn  | tricia  | venus   |     271 | 
 
-Using * is easy, but you cannot select only certain columns or control column display
-order. Naming columns explicitly enables you to select only the ones of interest, in any
-order. This query omits the recipient columns and displays the sender before the date
-and size:
+显式命名列使你可以以任意顺序查询感兴趣的列：
 
     mysql> SELECT srcuser, srchost, t, size FROM mail;
     +---------+---------+---------------------+---------+
@@ -54,14 +41,9 @@ and size:
     | phil    | mars    | 2014-05-12 15:02:49 |    1048 | 
     | barb    | saturn  | 2014-05-12 18:59:18 |     271 | 
 
-Unless you qualify or restrict a SELECT query in some way, it retrieves every row in your
-table. To be more precise, provide a WHERE clause that specifies one or more conditions
-that rows must satisfy.
+除非你以某种方式限制SELECT查询，它获取表中每一行。更确切地说，提供一个WHERE语句指定一个或多个条件行必须满足。
 
-Conditions can test for equality, inequality, or relative ordering. For some types of data,
-such as strings, you can use pattern matches. The following statements select columns
-from rows in the mail table containing srchost values that are exactly equal to the string
-'venus' or that begin with the letter 's':
+条件可以用来测试相等，不相等或相关的顺序。对于一些数据类型，比如字符串，可以使用模式匹配：
 
     mysql> SELECT t, srcuser, srchost FROM mail WHERE srchost = 'venus';
     +---------------------+---------+---------+
@@ -84,11 +66,7 @@ from rows in the mail table containing srchost values that are exactly equal to 
     | 2014-05-19 22:21:51 | gene    | saturn  | 
     +---------------------+---------+---------+
 
-The LIKE operator in the previous query performs a pattern match, where % acts as a
-wildcard that matches any string. Recipe 5.8 discusses pattern matching further.
-
-A WHERE clause can test multiple conditions and different conditions can test different
-columns. The following statement finds messages sent by barb to tricia:
+LIKE操作符执行一个模式匹配，%作为一个通配符匹配任意 字符串。WHERE语句可以测试多个条件且不同条件可以测试不同列：
 
     mysql> SELECT * FROM mail WHERE srcuser = 'barb' AND dstuser = 'tricia';
     +---------------------+---------+---------+---------+---------+-------+
@@ -98,9 +76,7 @@ columns. The following statement finds messages sent by barb to tricia:
     | 2014-05-12 18:59:18 | barb    | saturn  | tricia  | venus   |   271 | 
     +---------------------+---------+---------+---------+---------+-------+
 
-Output columns can be calculated by evaluating expressions. This query combines the
-srcuser and srchost columns using CONCAT() to produce composite values in email
-address format:
+输出列可以由表达式计算：
 
     mysql> SELECT t, CONCAT(srcuser,'@',srchost), size FROM mail;
     +---------------------+-----------------------------+---------+
@@ -111,40 +87,21 @@ address format:
     | 2014-05-12 15:02:49 | phil@mars                   |    1048 | 
     | 2014-05-12 18:59:18 | barb@saturn                 |     271 | 
 
-# 3.2. Naming Query Result Columns
+# 3.2. 命名查询结果列
 
-Problem
+**问题**
 
-The column names in a query result are unsuitable, ugly, or difficult to work with.
+查询结果中的列名字不合适，丑陋或难以处理。
 
-Solution
+**解决方法**
 
-Use aliases to choose your own column names.
+使用别名选择你自己的列名字。
 
-Discussion
+**讨论**
 
-When you retrieve a result set, MySQL gives every output column a name. (That’s how
-the mysql program gets the names you see displayed in the initial row of column headers
-in result set output.) By default, MySQL assigns the column names specified in the CREATE TABLE or ALTER TABLE statement to output columns, but if these defaults are not
-suitable, you can use column aliases to specify your own names.
+当你获取一个结果集，MySQL给每一个输出列一个名字。默认地，MySQL用创建表的列名赋值给输出列，你可以使用别名指定自己的列名。
 
-If an output column comes directly from a table, MySQL uses the table column name
-for the output column name. The following statement selects four table columns, the
-names of which become the corresponding output column names:
-
-    mysql> SELECT srcuser, srchost, t, size FROM mail;
-    +---------+---------+---------------------+---------+
-    | srcuser | srchost | t                   | size    |
-    +---------+---------+---------------------+---------+
-    | barb    | saturn  | 2014-05-11 10:15:08 |   58274 | 
-    | tricia  | mars    | 2014-05-12 12:48:13 |  194925 | 
-    | phil    | mars    | 2014-05-12 15:02:49 |    1048 | 
-    | barb    | saturn  | 2014-05-12 18:59:18 |     271 |
-
-If you generate a column by evaluating an expression, the expression itself is the column
-name. This can produce long and unwieldy names in result sets, as illustrated by the
-following statement that uses one expression to reformat the dates in the t column, and
-another to combine srcuser and srchost into email address format:
+如果你通过计算一个表达式生成一列，表达式本身就是列名：
 
     mysql> SELECT
         -> DATE_FORMAT(t, '%M %e, %Y'), CONCAT(srcuser, '@', srchost), size
@@ -157,9 +114,7 @@ another to combine srcuser and srchost into email address format:
     | May 12, 2014                | phil@mars                     |    1048 | 
     | May 12, 2014                | barb@saturn                   |     271 |
 
-To choose your own output column name, use an AS name clause to specify a column
-alias (the keyword AS is optional). The following statement retrieves the same result as
-the previous one, but renames the first column to date_sent and the second to sender:
+使用AS命名语句指定一列别名（关键字AS是可选的）：
 
     mysql> SELECT
         -> DATE_FORMAT(t,'%M %e, %Y') AS date_sent,
@@ -173,21 +128,12 @@ the previous one, but renames the first column to date_sent and the second to se
     | May 12, 2014 | phil@mars     |    1048 | 
     | May 12, 2014 | barb@saturn   |     271 | 
 
-The aliases make the column names more concise, easier to read, and more meaningful.
-Aliases are subject to a few restrictions. For example, they must be quoted if they are
-SQL keywords, entirely numeric, or contain spaces or other special characters (an alias
-can consist of several words if you want to use a descriptive phrase). The following
-statement retrieves the same data values as the preceding one but uses phrases to name
-the output columns:
+别名使列名更准确，更容易阅读和更有意义。别名受到一些限制。比如，如果它们是SQL关键字，数字或包含空格或其它特殊字符，则必须被引用：
 
     mysql> SELECT
         -> DATE_FORMAT(t,'%M %e, %Y') AS 'Date of message',
         -> CONCAT(srcuser,'@',srchost) AS 'Message sender',
         -> size AS 'Number of bytes' FROM mail;
-
-If MySQL complains about a single-word alias, the word probably is reserved. Quoting
-the alias should make it legal:
-
     mysql> SELECT 1 AS INTEGER;
     You have an error in your SQL syntax near 'INTEGER'
     mysql> SELECT 1 AS 'INTEGER';
@@ -197,23 +143,22 @@ the alias should make it legal:
     |       1 | 
     +---------+
 
-You cannot refer to column aliases in a WHERE clause. Thus, the following statement is
-illegal:
+你不能在WHERE语句中引用列的别名，因此下面这个语句非法：
 
     mysql> SELECT t, srcuser, dstuser, size/1024 AS kilobytes
         -> FROM mail WHERE kilobytes > 500;
 
-# 3.3. Sorting Query Results
+# 3.3. 排序查询结果
 
-Problem
+**问题**
 
-Your query results aren’t sorted the way you want.
+你的查询结果没有按照你想要的方式排序。
 
-Solution
+**解决方法**
 
-MySQL can’t read your mind. Use an ORDER BY clause to tell it how to sort result rows.
+使用ORDER BY语句告诉MySQL怎样排序结果行。
 
-Discussion
+**讨论**
 
 When you select rows, the MySQL server is free to return them in any order unless you
 instruct it otherwise by saying how to sort the result. There are lots of ways to use sorting
