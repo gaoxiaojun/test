@@ -97,8 +97,7 @@ BOOST_ASIO_DISABLE_THREADS如果被定义，它会禁止Boost.Asio中线程支�
 	void start_accept(socket_ptr sock) {
 	    acc.async_accept(*sock, boost::bind(handle_accept, sock, _1));
 	}
-	void handle_accept(socket_ptr sock, const boost::system::error_code &
-	err) {
+	void handle_accept(socket_ptr sock, const boost::system::error_code &err) {
 	    if (err) return;
 	    // at this point, you can read/write to the socket
 	    socket_ptr sock(new ip::tcp::socket(service));
@@ -128,7 +127,7 @@ Boost.Asio允许异常或错误码。所有同步函数重载了抛出异常或�
 
 当提到Boost.Asio中的线程，我们会讨论：
 
-* io_service：io_service类是线程安全的。多个线程可以调用io_service::run()。大多数时候你可能从单个线程调用io_service::run()，它一直阻塞知道所有异步操作完成。然而你可以从多个线程里面调用io_service::run()，这会阻塞所有调用了io_service::run()的线程。所有回调都将在线程自己的上下文环境中被调用。
+* io_service：io_service类是线程安全的。多个线程可以调用io_service::run()。大多数时候你可能从单个线程调用io_service::run()，它一直阻塞直到所有异步操作完成。然而你可以从多个线程里面调用io_service::run()，这会阻塞所有调用了io_service::run()的线程。所有回调都将在线程自己的上下文环境中被调用。
 * socket：socket类不是线程安全的。因此你应该避免在一个线程中读，然后写到另一个线程中去。
 * utility：utility类不是线程安全的，通常在多个线程中使用它不合理。它们中的大多数都是短时间使用，然后被回收。
 
@@ -164,7 +163,7 @@ Boost.Asio也允许连接Windows文件：
 	char data[512];
 	read(h, buffer(data, 512));
 
-你可以同样操作POSIX文件描述符，比如管道，标准I/O，多种设备：
+你可以同样操作POSIX文件描述符，比如管道，标准I/O，各种设备：
 
 	posix::stream_descriptor sd_in(service, ::dup(STDIN_FILENO));
 	char data[512];
@@ -172,7 +171,7 @@ Boost.Asio也允许连接Windows文件：
 
 # 计时器 #
 
-一些I/O操作可以有一个完成的最后期限，你只能应用这个到异步操作。
+一些I/O操作可以有一个完成的最后期限，这个概念只能用到异步操作。
 
 	bool read = false;
 	void deadline_handler(const boost::system::error_code &) {
@@ -256,7 +255,7 @@ void run_service(int idx) {
 
 * 第一种情况对最基本的程序有用。如果多个处理函数需要同时调用，将遇到瓶颈，因为它们以顺序方式被调用。如果一个处理函数花太长时间结束，所有后续处理函数都将等待。
 * 第二种情况适用于大多数程序。如果多个处理函数被同时调用，它们会在自己的线程被调用。唯一的瓶颈是如果所有处理线程都在忙碌，而新的处理函数被调用。
-* 第三种情况最复杂最灵活。你应该在第二种情况不够的时候使用它。你可以任务每一个处理线程（运行io_service::run()的线程）有自己的select/epoll循环。
+* 第三种情况最复杂最灵活。你应该在第二种情况不够的时候使用它。你可以认为每一个处理线程（运行io_service::run()的线程）有自己的select/epoll循环。
 
 最后记住如果没有更多的操作需要处理，run()将会终止。如果想要run()继续运行，你必须把更多工作给它。一种方法是在处理函数中开始另一个异步操作。另一种方法是模拟一些工作给它：
 
