@@ -6,10 +6,11 @@ argument as the length of password which you want to generate.'''
 import os
 import sys
 from string import ascii_letters, punctuation, digits
-from random import choice
+from random import choice, seed
 
 def rand_passwd():
     try:
+        seed()
         s = ascii_letters + punctuation + digits
         return ''.join([choice(s) for i in range(int(sys.argv[1]))])
     except IndexError, e:
