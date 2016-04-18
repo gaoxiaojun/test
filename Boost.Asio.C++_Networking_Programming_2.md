@@ -216,8 +216,9 @@ int main(int argc, char* argv[]) {
 * io_control(cmd)：在套接字上执行一个I/O命令。
 
 以下是你可以读取或设置的套接字选项：
-```table
+
 | 名字 | 描述 | 类型 |
+|---|---|---|
 | broadcast | 如果真，允许广播消息 | bool |
 | debug | 如果真，使socket-level调试生效 | bool |
 | enable_connection_aborted | 如果真，报告在accept()时连接被中止 | bool |
@@ -227,7 +228,6 @@ int main(int argc, char* argv[]) {
 | send_buffer_size | 套接字发送缓冲区大小 | int |
 | send_low_watermark | 提供处理套接字输出的最小字节数 | int |
 | ip::v6_only | 如果真，只允许IPv6通信 | bool |
-```
 
 每一个名字代表内部socket的一个typedef或一个类。以下是例子：
 ```c++
@@ -249,8 +249,9 @@ sock.set_option(sbs);
 #### TCP vs UDP vs ICMP ####
 
 如果一个成员函数不在下表，说明它对所有socket类可用：
-```table
+
 | 名字 | TCP | UDP | ICMP |
+|---|---|---|---|
 | async_read_some | Yes | - | - |
 | async_receive_from | - | Yes | Yes |
 | async_write_some | Yes | - | - |
@@ -259,7 +260,6 @@ sock.set_option(sbs);
 | receive_from | - | Yes | Yes |
 | write_some | Yes | - | - |
 | send_to | - | Yes | Yes |
-```
 
 #### 其它函数 ####
 
@@ -392,7 +392,7 @@ int main(int argc, char* argv[]) {
         OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED, 0);
     windows::stream_handle h(service, file);
     streambuf buf;
-    async_read(h, buf, transfer_exactly(256), 
+    async_read(h, buf, transfer_exactly(256),
         boost::bind(on_read,boost::ref(buf),_1,_2));
     service.run();
 }
