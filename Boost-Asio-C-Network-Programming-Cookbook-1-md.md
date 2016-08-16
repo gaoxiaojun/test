@@ -111,3 +111,168 @@ typedef basic_endpoint<udp> endpoint;
 2. 创建一个代表传输层协议（TCP或UDP）和下层IP协议（IPv4或IPv6）的类对象。
 3. 创建一个代表套接字的对象，传递asio::io_service给它的构造函数。
 4. 调用open()方法，传递协议参数给它。
+
+```c++
+asio_io_service ios;
+asio::ip::tcp protocol = asio::ip::tcp::v4();
+asio::ip::tcp::socket sock(ios);
+boost::system::error_code ec;
+sock.open(protocol, ec);
+if (ec.value() != 0) {
+    // handle error
+    std::cerr << "Error code = " << ec.value()
+        << " Message: " << ec.message();
+    return ec.value();
+}
+```
+
+asio::ip::tcp类代表TCP协议，它没有提供功能，而是像一个数据结构包含一组描述协议的值。
+
+asio::ip::tcp没有公开的构造函数。相反它提供了2个静态方法（v4()和v6()）返回该类对象。
+
+```c++
+class tcp {
+public:
+    typedef basic_endpoint<tcp> endpoint;
+    typedef basic_stream_socket<tcp> socket;
+    typedef basic_socket_acceptor<tcp> acceptor;
+};
+```
+
+使用UDP协议创建主动套接字和TCP类似：
+
+```c++
+asio::io_service ios;
+asio::ip::udp protocol = asio::ip::udp::v6();
+try {
+    asio::ip::udp::socket sock(ios, protocol);
+} catch (boost::system::system_error& e) {
+    std::cerr << e.code() << " " << e.what();
+}
+```
+
+## 创建一个被动套接字
+
+一个被动套接字或者接收器套接字是一种用来等待建立连接请求的套接字。它有2个重要的暗示：
+
+- 被动套接字只用在服务端程序或者既是服务端又是客户端的程序。
+- 被动套接字只被TCP协议定义。
+
+在Boost.Asio里面一个被动套接字由asio::ip::tcp::acceptor类来表示。
+
+1. 创建一个asio::io_service实例或使用之前创建的。
+2. 创建一个asio::ip::tcp类对象代表TCP协议和所需底层的IP协议（IPv4和IPv6）。
+3. 创建一个asio::ip::tcp::acceptor类对象表示接收器套接字，传递asio::io_service类对象给它的构造函数。
+4. 调用接收器套接字的open()函数，传递第2步创建的对象给它。
+
+```c++
+asio::io_service ios;
+asio::ip::tcp protocol = asio::ip::tcp::v6();
+asio::ip::tcp::acceptor acceptor(ios);
+boost::system::error_code ec;
+acceptor.open(protocol, ec);
+if (ec.value() != 0) {
+    std::cerr << ec.value() << " " << ec.message();
+}
+```
+
+## 解析域名
+
+域名系统是一个分布式的命名系统，它允许将人类友好的名字和计算机网络中的设备关联起来。一个域名是一个表示计算机网络设备名字的字符串。更确切地说，一个域名是一个或多个IP地址的别名。
+
+域名系统作为一个分布式的数据库，存储了域名到相应IP地址的映射，并提供一个接口，允许查询一个特定域名所映射的IP地址。将域名转换为相应IP地址的过程称为域名解析。
+
+1. 获取DNS域名和端口，并用字符串表示。
+2. 创建一个asio::io_service实例或使用之前创建的。
+3. 创建一个resolver::query类对象。
+4. 创建一个适合必要协议的DNS解析对象。
+5. 调用解析器的resolve()方法，用query对象作为参数。
+
+```c++
+std::string host = "samplehost.com";
+std::string port_num = "3333";
+
+asio::io_service ios;
+
+asio::ip::tcp::resolver::query query(host, port_num,
+    asio::ip::tcp::resolver::query::numeric_service);
+    
+asio::ip::tcp::resolver resolver(ios);
+
+boost::system::error_code ec;
+asio::ip::tcp::resolver::iterator it = 
+    resolver.resolve(query, ec);
+if (ec != 0) {
+    // handle error
+}
+```
+
+asio::ip::tcp::resolver::iterator类是一个迭代器，它指向解析结果的第一个元素，其类型是asio::ip::basic_resolver_entry<tcp>。每一个结果包含一个endpoint对象，可以通过asio::ip::basic_resolver_entry<tcp>::endpoint()获取。
+
+```c++
+asio::ip::tcp::resolver::iterator it =
+    resolver.resolve(query, ec);
+asio::ip::tcp::resolver::iterator it_end;
+for (; it != it_end; ++it) {
+    asio::ip::tcp::endpoint = it->endpoint();
+}
+```
+
+当域名被映射到多个IP地址，并且有些是IPv4，有些是IPv6时，则结果集合中包含2种endpoint。
+
+通过UDP协议解析域名也是类似的。
+
+```c++
+std::string host = "www.samplehost.com";
+std::string port_num = "3333";
+
+asio::io_service ios;
+
+asio::ip::udp::resolver::query query(host, port_num,
+    asio::ip::udp::resolver::query::numeric_service);
+
+asio::ip::udp::resolver resolver(ios);
+
+boost::system::error_code ec;
+asio::ip::udp::resolver::iterator it = 
+    resolver.resolve(query, ec);
+if (ec != 0) {
+    // handle error
+}
+```
+
+## 绑定套接字到端点
+
+有些操作隐式绑定未绑定套接字。比如主动套接字连接服务器，客户端程序不需要特定的断点与服务器通信，因此它通常将选择绑定IP地址和端口的权利委托给操作系统。服务端程序通常需要显示将被动套接字绑定到特定的端点。
+
+1. 获取服务器监听连接请求的端口。
+2. 创建一个表示主机所有可用IP地址的端点。
+3. 创建并打开一个接收器套接字。
+4. 调用接收器套接字的bind()方法，将断点作为参数传给它。
+
+```c++
+unsigned short port_num = 3333;
+asio::ip::tcp::endpoint ep(asio::ip::address_v4::any(), port_num);
+asio::ip::tcp::acceptor acceptor(ios, ep.protocol());
+
+boost::system::error_code ec;
+acceptor.bind(ep, ec);
+if (ec != 0) {
+    // handle error
+}
+```
+
+UDP服务器不建立连接，而且使用主动套接字等待到来的请求。
+
+```c++
+unsigned short port_num = 3333;
+asio::ip::udp::endpoint ep(asio::ip::address_v4::any(), port_num);
+asio::io_service ios;
+asio::ip::udp::socket sock(ios, ep.protocol());
+
+boost::system::error_code ec;
+sock.bind(ep, ec);
+if (ec != 0) {
+    // handle error
+}
+```
