@@ -32,7 +32,7 @@ UDP协议是一个与TCP协议不同的传输层协议，它具有下列特性�
 
 1. 获取服务器程序的IP地址和端口。IP地址应该是点号隔开的字符串（IPv4）或者16进制的字符串（IPv6）。
 2. 使用一个asio::ip::address对象代表IP地址。
-3. 用第2步的创建的地址和端口初始化一个asio::ip::tcp::endpoint对象。
+3. 用address对象和端口初始化一个asio::ip::tcp::endpoint对象。
 
 ```c++
 #include <boost/asio.hpp>
@@ -52,7 +52,7 @@ asio::ip::tcp::endpoint ep(ip_address, port_num);
 ### 服务端创建端点
 
 1. 获取一个服务器将要监听请求的端口。
-2. 创建一个特殊的asio::ip::address对象带包这个服务器所有可用的IP地址。
+2. 创建一个特殊的asio::ip::address对象表示这个服务器所有可用的IP地址。
 3. 使用address对象和端口初始化一个asio::ip::tcp::endpoint对象。
 
 ```c++
@@ -207,7 +207,7 @@ if (ec != 0) {
 }
 ```
 
-asio::ip::tcp::resolver::iterator类是一个迭代器，它指向解析结果的第一个元素，其类型是asio::ip::basic_resolver_entry<tcp>。每一个结果包含一个endpoint对象，可以通过asio::ip::basic_resolver_entry<tcp>::endpoint()获取。
+asio::ip::tcp::resolver::iterator类是一个迭代器，它指向解析结果的第一个元素，元素类型是asio::ip::basic_resolver_entry&lt;tcp&gt;。每一个结果包含一个endpoint对象，可以通过asio::ip::basic_resolver_entry&lt;tcp&gt;::endpoint()获取。
 
 ```c++
 asio::ip::tcp::resolver::iterator it =
@@ -243,7 +243,7 @@ if (ec != 0) {
 
 ## 绑定套接字到端点
 
-有些操作隐式绑定未绑定套接字。比如主动套接字连接服务器，客户端程序不需要特定的断点与服务器通信，因此它通常将选择绑定IP地址和端口的权利委托给操作系统。服务端程序通常需要显示将被动套接字绑定到特定的端点。
+有些操作隐式绑定未绑定套接字。比如主动套接字连接服务器，客户端程序不需要特定的端点与服务器通信，因此它通常将选择绑定IP地址和端口的权利委托给操作系统。服务端程序通常需要显示将被动套接字绑定到特定的端点。
 
 1. 获取服务器监听连接请求的端口。
 2. 创建一个表示主机所有可用IP地址的端点。
@@ -274,5 +274,29 @@ boost::system::error_code ec;
 sock.bind(ep, ec);
 if (ec != 0) {
     // handle error
+}
+```
+
+## 连接一个套接字
+
+1. 获取服务器程序的IP地址和端口。
+2. 用IP地址和端口创建一个endpoint对象。
+3. 创建并打开一个主动套接字。
+4. 用endpoint对象作参数调用connect()方法。
+5. 如果方法成功，套接字被认为已连接并可以用来发送和接收来自服务器的数据。
+
+```c++
+std::string raw_ip_address = "127.0.0.1";
+unsigned short port_num = 3333;
+try {
+    asio::ip::tcp::endpoint ep(
+        asio::ip::address::from_string(raw_ip_address), port_num);
+    asio::io_service ios;
+    asio::ip::tcp::socket sock(ios, ep.protocol());
+    sock.connect(ep);
+    // At this point socket 'sock' is connected to the server
+    // connect()方法会将客户端IP地址和操作系统选好端口绑定到'sock'
+} catch (boost::system::system_error& e) {
+    std::cerr << e.code() << " " << e.what();
 }
 ```
