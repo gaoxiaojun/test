@@ -300,3 +300,68 @@ try {
     std::cerr << e.code() << " " << e.what();
 }
 ```
+
+自由函数asio::connect()接收一个主动套接字对象和一个asio::ip::tcp::resolver::iterator对象作为参数，遍历所有端点。
+
+1. 获取DNS域名和端口，并用字符串表示。
+2. 使用asio::ip::tcp::resolver类解析域名。
+3. 创建一个主动套接字，不打开它。
+4. 调用asio::connect()函数。
+
+```c++
+std::string host = "samplehost.com";
+std::string port_num = "3333";
+
+asio::ip::tcp::resolver::query query(host, port_num
+    asio::ip::tcp::resolver::query::numeric_service);
+    
+asio::io_service ios;
+
+asio::ip::tcp::resolver resolver(ios);
+
+try {
+    asio::ip::tcp::resolver::iterator it = 
+        resolver.resolve(query);
+    
+    asio::ip::tcp::socket sock(ios);
+
+    asio::connect(sock, it);
+    // At this point 'sock' is connected to the server
+} catch (boost::system::system_error& e) {
+    std::cerr << e.code() << " " << e.what();
+}
+```
+
+## 接受连接
+
+1. 获取服务器监听连接请求的端口。
+2. 创建一个端点。
+3. 初始化并打开一个接收器套接字。
+4. 绑定接收器套接字到端点。
+5. 调用listen()方法开始监听端点上到来的连接请求。
+6. 初始化一个主动套接字对象。
+7. 当准备好处理连接请求时，用主动套接字作为参数，调用接收器套接字的accept()方法。
+8. 如果调用成功，主动套接字和客户端程序就连上了，可以用来通信了。
+
+```c++
+const int BACKLOG_SIZE = 30;
+unsigned short port_num = 3333;
+asio::ip::tcp::endpoint ep(asio::ip::address_v4::any(), port_num);
+
+asio::io_service ios;
+
+try {
+    asio::ip::tcp::acceptor acceptor(ios, ep.protocol());
+    acceptor.bind(ep);
+
+    acceptor.listen(BACKLOG_SIZE);
+
+    asio::ip::tcp::socket sock(ios);
+    acceptor.accept(sock);
+    // At this point 'sock' is connected to the client
+} catch (boost::system::system_error& e) {
+    std::cerr << e.code() << " " << e.what();
+}
+```
+
+注意UDP服务器不使用接收器套接字，因为UDP协议不需要建立连接。相反，主动套接字被使用来绑定到一个端点并监听到来的报文，而且同一个主动套接字也用来通信。
