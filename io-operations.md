@@ -13,21 +13,25 @@ IO操作是任何分布式应用的网络基础设施的关键操作。它们直
 
 ### 同步和异步IO操作
 
-Boost.Asio支持两张那类型的IO操作：同步和异步。同步操作阻塞当前线程的执行直到操作完成。异步操作初始化时关联一个回调函数，当操作完成时，Boost.Asio会调用回调函数。
+Boost.Asio支持两种类型的IO操作：同步和异步。同步操作阻塞当前线程的执行直到操作完成。异步操作在初始化时关联一个回调函数，当操作完成时，Boost.Asio会调用回调函数。
 
 在一个或多个异步操作初始化后，程序使用一个线程来运行Boost.Asio库。Boost.Asio库使用这个线程运行事件循环并调用回调函数通知异步操作完成，异步操作的结果作为参数传递给回调函数。
 
 ### 附加操作
 
+1. 取消异步操作。
 取消之前初始化的异步操作的能力很重要。它允许程序声明之前初始化的异步操作不再有效。
 
-关闭套接字很有用，如果需要通知另一个程序整个报文已发送。
+2. shutdown套接字。
+shutdown套接字很有用，如果需要通知另一个程序整个报文已发送。
+
+3. close套接字。
 
 ## 使用固定长度IO缓冲区
 
 固定长度的IO缓冲区通常用在报文长度已知的情况下。在Boost.Asio里面，固定长度IO缓冲区由asio::mutable_buffer或asio::const_buffer表示。asio::mutable_buffer表示可写缓冲区，asio::const_buffer表示只读缓冲区。
 
-但是asio::mutable_buffer和asio::const_buffer并没有直接在Boost.Asio的IO函数中直接使用。相反MutableBufferSequence和ConstBufferSequence概念被引入。MutableBufferSequence指定一个对象表示asio::mutable_buffer对象的集合。相应地，ConstBufferSequence指定一个对象表示asio::const_buffer对象的集合。
+但是asio::mutable_buffer和asio::const_buffer并不能直接在Boost.Asio的IO函数中直接使用。相反MutableBufferSequence和ConstBufferSequence概念被引入。MutableBufferSequence指定一个对象表示asio::mutable_buffer对象的集合。相应地，ConstBufferSequence指定一个对象表示asio::const_buffer对象的集合。
 
 asio::buffer()自由函数拥有28个重载形式，接收多种缓冲区表示形式并返回一个asio::mutable_buffers_1或asio::const_buffers_1对象。如果传给asio::buffer()函数的参数是只读类型，则返回asio::const_buffers_1对象，反之返回asio::mutable_buffers_1对象。asio::mutable_buffers_1和asio::const_buffers_1是asio::mutable_buffer和asio::const_buffer相应的适配。
 
@@ -75,6 +79,41 @@ asio::mutable_buffers_1 input_buf =
 ```
 
 > 缓冲区所有权
-asio::mutable_buffer，asio::const_buffer，asio::mutable_buffers_1，asio::const_buffers_1等并没有原始缓冲区的所有权，它们只提供访问缓冲区的接口，不控制其生命周期。
+asio::mutable_buffer，asio::const_buffer，asio::mutable_buffers_1，asio::const_buffers_1等并不拥有原始缓冲区的所有权，它们只提供访问缓冲区的接口，不控制其生命周期。
 
+## 使用可扩展面向流的IO缓冲区
 
+可扩展缓冲区是当新数据写入时可以动态增长的缓冲区。它们经常用于从套接字读取未知大小的报文。
+
+可扩展面向流的缓冲区在Boost.Asio中由asio::streambuf类表示：
+
+```c++
+typedef basic_streambuf<> streambuf;
+```
+
+asio::basic_streambuf<>类继承自std::streambuf。
+
+```c++
+asio::streambuf buf;
+std::ostream output(&buf);
+
+// Writing the message to the stream-based buffer.
+output << "Message";
+
+// Instantiate an input stream which uses our stream buffer.
+std::istream input(&buf);
+
+std::string message;
+std::getline(input, message);
+```
+
+## 同步写TCP套接字
+
+写套接字最基本的方法是使用Boost.Asio中的asio::ip::tcp::socket类的write_some()方法：
+
+```c++
+template<typename ConstBufferSequence>
+std::size_t write_some(const ConstBufferSequence& buffers);
+```
+
+如果方法成功执行，返回写入的字节数。需要强调的是这个方法可能不会发送参数指定的所有数据，它只保证如果错误不发生至少发送一个字节。这意味着为了发送缓冲区中所有数据需要调用write_some()多次。
