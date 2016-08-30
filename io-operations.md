@@ -73,8 +73,7 @@ buffers_sequence.push_back(asio_buf);
 const size_t BUF_SIZE_BYTES = 20;
 std::unique_ptr<char[]> buf(new char[BUF_SIZE_BYTES]);
 asio::mutable_buffers_1 input_buf =
-    asio::buffer(static_cast<void*>(buf.get()),
-        BUF_SIZE_BYTES);
+    asio::buffer(static_cast<void*>(buf.get()), BUF_SIZE_BYTES);
 // input_buf can be used in Boost.Asio input operations
 ```
 
@@ -117,3 +116,104 @@ std::size_t write_some(const ConstBufferSequence& buffers);
 ```
 
 如果方法成功执行，返回写入的字节数。需要强调的是这个方法可能不会发送参数指定的所有数据，它只保证如果错误不发生至少发送一个字节。这意味着为了发送缓冲区中所有数据需要调用write_some()多次。
+
+1. 在客户端程序中，分配，打开并连接一个主动TCP套接字。在服务端程序中，通过接收器套接字接收一个主动TCP套接字的连接请求。
+2. 分配缓冲区并将要写到套接字的数据填充进缓冲区。
+3. 在一个循环中调用套接字的write_some()方法多次直到缓冲区中的数据都发送完。
+
+```c++
+void writeToSocket(asio::ip::tcp::socket& sock) {
+    std::string buf = "Hello";
+    std::size_t total_bytes_written = 0;
+    while (total_bytes_written != buf.length()) {
+        total_bytes_written += sock.write_some(
+            asio::buffer(buf.c_str() + total_bytes_written,
+                buf.length() - total_bytes_written));
+    }
+}
+```
+
+### 替代品——send()方法
+
+asio::ip::tcp::socket类包含另外一个同步写数据的方法send()。它有3种重载形式。其中一个和write_some()方法一样，有一样的签名并提供同样的功能。
+
+第二个重载函数接收一个额外的参数：
+
+```c++
+template<typename ConstBufferSequence>
+std::size_t send(const ConstBufferSequence& buffers,
+    socket_base::message_flags flags);
+```
+
+第三个重载函数和第二个一样，但是它不抛出异常，而是接收一个boost::system::error_code的参数。
+
+使用write_some()方法向套接字写数据看起来非常复杂，因为必须使用一个循环，并且每一次迭代都需要正确构造缓冲区并跟踪已写的数据。幸运的是，Boost.Asio提供一个自由函数asio::write()简化向套接字写数据。asio::write()有8种重载形式。
+
+```c++
+template<typename SyncWriteStream, typename ConstBufferSequence>
+std::size_t write(SyncWriteStream& s, const ConstBufferSequence& buffers);
+
+void WriteToSocketEnhanced(asio::ip::tcp::socket& sock) {
+    std::string buf = "hello";
+    asio::write(sock, asio::buffer(buf));
+}
+```
+
+## 同步读TCP套接字
+
+由Boost.Asio提供的从套接字读取数据最基本的方法是asio::ip::tcp::socket类的read_some()方法。
+
+```c++
+template<typename MutableBufferSequence>
+std::size_t read_some(const MutableBufferSequence& buffers);
+```
+
+需要注意的是没有办法控制read_some()将会读取多少数据。它只保证如果错误不发生至少读取一个字节。通常情况下，为了从套接字读取某一数量的数据需要调用read_some()多次。
+
+1. 在客户端程序中，分配，打开并连接一个主动TCP套接字。在服务端程序中，通过接收器套接字接收一个主动TCP套接字的连接请求。
+2. 分配足够大小的缓冲区使得能够装下预期的报文。
+3. 在一个循环中调用套接字的read_some()方法多次直到读完数据。
+
+```c++
+std::string readFromSocket(asio::ip::tcp::socket& sock) {
+    const unsigned char MESSAGE_SIZE = 7;
+    char buf[MESSAGE_SIZE];
+    std::size_t total_bytes_read = 0;
+    while (total_bytes_read != MESSAGE_SIZE) {
+        total_bytes_read += sock.read_some(
+            asio::buffer(buf + total_bytes_read,
+                MESSAGE_SIZE - total_bytes_read));
+    }
+    return std::string(buf, total_bytes_read);
+}
+```
+
+### 替代品——receive()方法
+
+asio::ip::tcp::socket类包含另外一个同步读数据的方法receive()。它有3种重载形式。其中一个和read_some()方法一样，有一样的签名并提供同样的功能。
+
+第二个重载函数接收一个额外的参数：
+
+```c++
+template<typename MutableBufferSequence>
+std::size_t receive(const MutableBufferSequence& buffers,
+    socket_base::message_flags flags);
+```
+
+第三个重载函数和第二个一样，但是它不抛出异常，而是接收一个boost::system::error_code的参数。
+
+使用read_some()方法向套接字写数据看起来非常复杂，因为必须使用一个循环，并且每一次迭代都需要正确构造缓冲区并跟踪已写的数据。幸运的是，Boost.Asio提供一组自由函数简化向套接字写数据。有3种读函数，每个有7种重载形式。
+
+### asio::read()函数
+
+```c++
+template<typename SyncReadStream, typename MutableBufferSequence>
+std::size_t read(SyncReadStream& s, const MutableBufferSequence& buffers)
+
+std::string readFromSocketEnhanced(asio::ip::tcp::socket& sock) {
+    const unsigned char MESSAGE_SIZE = 7;
+    char buf[MESSAGE_SIZE];
+    asio::read(sock, asio::buffer(buf, MESSAGE_SIZE));
+    return std::string(buf, MESSAGE_SIZE);
+}
+```
