@@ -268,3 +268,71 @@ void write_handler(const boost::system::error_code& ec,
 
 async_write_some()方法保证如果不发生错误，至少写一个字节数据。这意味着通常情况下，为了将所有数据写到套接字，需要调用async_write_some()多次。
 
+1. 定义一个数据结构，包含套接字对象指针，一个缓冲区和一个表示已写字节数的变量。
+2. 定义一个回调函数，当异步写操作完成时调用。
+3. 在客户端程序中，分配，打开并连接一个主动TCP套接字。在服务端程序中，通过接收器套接字接收一个主动TCP套接字的连接请求。
+4. 分配缓冲区并将要写到套接字的数据填充进缓冲区。
+5. 调用async_write_some()初始化一个异步操作，指定步骤2的函数为回调函数。
+6. 调用asio::io_service类的run()方法。
+7. 在回调函数中增加已写字节数。如果已写字节数比要写的字节数少，初始化一个新的异步写操作。
+
+```c++
+struct Session {
+    std::shared_ptr<asio::ip::tcp::socket> sock;
+    std::string buf;
+    std::size_t total_bytes_written;
+};
+
+void callback(const boost::system::error_code& ec,
+    std::size_t bytes_transferred, std::shared_ptr<Session> s) {
+    if (ec != 0) {
+        std::cerr << "Error occured! Error code = " << ec.value()
+        << ". Message: " << ec.message();
+        return;
+    }
+    s->total_bytes_written += bytes_transferred;
+    if (s->total_bytes_written == s->buf.length()) {
+        return;
+    }
+    
+    s->sock->async_write_some(asio::buffer(
+        s->buf.c_str() + s->total_bytes_written,
+        s->buf.size() - s->total_bytes_written),
+        std::bind(callback, std::placeholders::_1,
+        std::placeholders::_2, s));
+}
+
+void writeToSocket(std::shared_ptr<asio::ip::tcp::socket> sock) {
+    std::shared_ptr<Session> s(new Session);
+    s->buf = std::string("Hello");
+    s->total_bytes_written = 0;
+    s->sock = sock;
+    
+    s->sock->async_write_some(
+        asio::buffer(s->buf),
+        std::bind(callback, std::placeholders::_1, std::placeholders::_2, s));
+}
+
+int main()
+{
+    std::string raw_ip_address = "127.0.0.1";
+    unsigned short port_num = 3333;
+    
+    try {
+        asio::ip::tcp::endpoint ep(asio::ip::tcp::address::from_string(raw_ip_address), port_num);
+        asio::io_service ios;
+        
+        std::shared_ptr<asio::ip::tcp::socket> sock(
+            new asio::ip::tcp::socket(ios, ep.protocol()));
+        
+        sock->connect(ep);
+        writeToSocket(sock);
+        
+        ios.run();
+    }
+    catch (boost::system::system_error &e) {
+    }
+    
+    return 0;
+}
+```
