@@ -217,3 +217,54 @@ std::string readFromSocketEnhanced(asio::ip::tcp::socket& sock) {
     return std::string(buf, MESSAGE_SIZE);
 }
 ```
+
+### read_until()函数
+
+asio::read_until()函数从套接字读取数据直到遇到指定的模式，它有8种重载形式。
+
+```c++
+template<typename SyncReadStream, typename Allocator>
+std::size_t read_until(
+    SyncReadStream& s,
+    boost::asio::basic_streambuf<Allocator>& b,
+    char delim);
+```
+
+asio::read_until从套接字s读取数据到缓冲区b直到遇到指定的字符delim。需要注意的是asio::read_until内部使用read_some()方法读取数据的。当函数返回时，缓冲区b中可能包含在delim后的数据。也就是说程序员需要处理这种情况。
+
+```c++
+std::string readFromSocketDelim(asio::ip::tcp::socket& sock) {
+    asio::streambuf buf;
+    asio::read_until(sock, buf, '\n');
+    std::string message;
+    std::istream input_stream(&buf);
+    std::getline(input_stream, message);
+    return message;
+}
+```
+
+### read_at()函数
+
+asio::read_at()函数从特定位置开始读数据，参考Boost文档。
+
+## 异步写TCP套接字
+
+Boost.Asio提供的异步写数据最基本的工具是asio::ip::tcp::socket类的async_write_some()方法。
+
+```c++
+template<typename ConstBufferSequence, typename WriteHandler>
+void async_write_some(const ConstBufferSequence& buffers,
+    WriteHandler handler);
+```
+
+async_write_some()方法初始化一个写操作并立即返回。第一个参数包含要写到套接字的数据，第二个参数是个回调函数，当初始化操作完成后由Boost.Asio调用。
+
+回调应该具有下述的签名：
+
+```c++
+void write_handler(const boost::system::error_code& ec,
+    std::size_t bytes_transferred);
+```
+
+async_write_some()方法保证如果不发生错误，至少写一个字节数据。这意味着通常情况下，为了将所有数据写到套接字，需要调用async_write_some()多次。
+
